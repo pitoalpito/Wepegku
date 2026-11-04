@@ -1087,7 +1087,8 @@ public class BossController : MonoBehaviour
             return;
 
         // Posisi emitter berada di tengah garis.
-        particle.transform.position = (start + end) * 0.5f;
+        // particle.transform.position = (start + end) * 0.5f;
+        particle.transform.position = start;
 
         // Rotasi mengikuti arah garis.
         float angle = Mathf.Atan2(
@@ -1096,9 +1097,9 @@ public class BossController : MonoBehaviour
         ) * Mathf.Rad2Deg;
 
         particle.transform.rotation = Quaternion.Euler(
-            0f,
-            0f,
-            angle
+            -angle,
+            90f,
+            -90f
         );
 
         // Bentuk area emisi menjadi garis panjang.
