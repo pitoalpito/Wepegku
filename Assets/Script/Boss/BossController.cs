@@ -37,7 +37,6 @@ public class BossController : MonoBehaviour
 
     [Header("Arena")]
     public Transform player;
-    public Transform[] fallingRockSpawnPoints;
     public GameObject fallingRockPrefab;
 
     [Header("Laser")]
@@ -113,7 +112,10 @@ public class BossController : MonoBehaviour
     public float handShakeDuration = 0.4f;
     public float handShakeAmount = 0.12f;
     public float handShakeSpeed = 30f;
-    public float handSlamDistance = 1.5f;
+    // public float handSlamDistance = 1.5f;
+
+    public float slamGroundOffset = 0f;
+    public float slamRaycastDistance = 100f;
 
     public float handRaiseDuration = 0.3f;
     public float handSlamDuration = 0.12f;
@@ -738,7 +740,55 @@ public class BossController : MonoBehaviour
     // GROUND SLAM
     // =========================================
 
+    Vector3 GetGroundSlamTarget(Transform handRoot)
+    {
+        if (handRoot == null)
+            return Vector3.zero;
 
+        // Mencari collider ke arah bawah.
+        RaycastHit2D[] hits = Physics2D.RaycastAll(
+            handRoot.position,
+            Vector2.down,
+            slamRaycastDistance
+        );
+
+        // Mengurutkan collider berdasarkan jarak.
+        System.Array.Sort(
+            hits,
+            (a, b) => a.distance.CompareTo(b.distance)
+        );
+
+        foreach (RaycastHit2D hit in hits)
+        {
+            if (hit.collider == null)
+                continue;
+
+            // Memeriksa Tag Ground.
+            if (hit.collider.CompareTag("Ground"))
+            {
+                Vector3 groundPosition = new Vector3(
+                    handRoot.position.x,
+                    hit.point.y + slamGroundOffset,
+                    handRoot.position.z
+                );
+
+                if (handRoot.parent != null)
+                {
+                    return handRoot.parent.InverseTransformPoint(
+                        groundPosition
+                    );
+                }
+
+                return groundPosition;
+            }
+        }
+
+        Debug.LogWarning(
+            "Ground tidak ditemukan di bawah " + handRoot.name
+        );
+
+        return handRoot.localPosition;
+    }
     IEnumerator GroundSlam()
     {
         currentState = BossState.SlamTelegraph;
@@ -787,13 +837,19 @@ public class BossController : MonoBehaviour
         if (isDead)
             yield break;
 
-        // 3. SLAM: tangan turun dengan cepat
+        // 3. SLAM: tangan turun sampai menyentuh tanah
         currentState = BossState.SlamAttack;
+
+        Vector3 leftSlamTarget =
+            GetGroundSlamTarget(leftHandRoot);
+
+        Vector3 rightSlamTarget =
+            GetGroundSlamTarget(rightHandRoot);
 
         yield return StartCoroutine(
             MoveHands(
-                leftHandStartPosition + Vector3.down * handSlamDistance,
-                rightHandStartPosition + Vector3.down * handSlamDistance,
+                leftSlamTarget,
+                rightSlamTarget,
                 handSlamDuration
             )
         );
@@ -841,6 +897,7 @@ public class BossController : MonoBehaviour
                     handReturnDuration
                 )
             );
+            ThrownObjectCollision.instance.canHitBoss = true;
         }
     }
 
@@ -898,26 +955,54 @@ public class BossController : MonoBehaviour
     }
 
 
+
     void SpawnFallingRocks()
     {
-        if (fallingRockPrefab == null ||
-            fallingRockSpawnPoints == null)
-        {
+        if (fallingRockPrefab == null)
             return;
-        }
 
-        foreach (Transform spawnPoint in fallingRockSpawnPoints)
+        // Jumlah batu tetap 5.
+        const int rockCount = 1;
+
+        Collider2D bossCollider = GetComponent<Collider2D>();
+
+        for (int i = 0; i < rockCount; i++)
         {
-            if (spawnPoint == null)
-                continue;
+            float spawnX;
+            float spawnY;
+
+            if (bossCollider != null)
+            {
+                Bounds bounds = bossCollider.bounds;
+
+                spawnX = Random.Range(
+                    bounds.min.x,
+                    bounds.max.x
+                );
+
+                spawnY = bounds.max.y + Random.Range(1.5f, 3.5f);
+            }
+            else
+            {
+                spawnX = transform.position.x + Random.Range(-3f, 3f);
+                spawnY = transform.position.y + 4f;
+            }
+
+            Vector3 spawnPosition = new Vector3(
+                spawnX,
+                spawnY,
+                transform.position.z
+            );
 
             Instantiate(
                 fallingRockPrefab,
-                spawnPoint.position,
+                spawnPosition,
                 Quaternion.identity
             );
+            ThrownObjectCollision.instance.canHitBoss = false;
         }
     }
+
     IEnumerator BossIntroSequence()
     {
         // Tampilkan panel intro.

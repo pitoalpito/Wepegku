@@ -29,12 +29,16 @@ public class ThrownObjectCollision : MonoBehaviour
     private readonly HashSet<BossHand> hitBossHands = new();
 
     private bool wasInHitMotion;
+    public bool canHitBoss;
+
+    public static ThrownObjectCollision instance;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         objectHitReaction = GetComponent<EnemyHitReaction>();
         objectHealth = GetComponent<ObjectHealth>();
+        instance = this;
     }
 
     void Update()
@@ -72,10 +76,9 @@ public class ThrownObjectCollision : MonoBehaviour
         // 1. TABRAKAN DENGAN TANGAN BOSS
         // =====================================
 
-        BossHand bossHand =
-            collision.collider.GetComponentInParent<BossHand>();
+        BossHand bossHand = collision.collider.GetComponentInParent<BossHand>();
 
-        if (bossHand != null)
+        if (bossHand != null && canHitBoss)
         {
             if (bossHand.IsDefeated)
                 return;
