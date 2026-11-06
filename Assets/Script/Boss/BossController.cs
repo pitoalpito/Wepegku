@@ -39,6 +39,11 @@ public class BossController : MonoBehaviour
     public Transform player;
     public GameObject fallingRockPrefab;
 
+    [Header("Falling Rock Spawn")]
+    public float fallingRockMinX = -10f;
+    public float fallingRockMaxX = 10f;
+    public float fallingRockSpawnY = 8f;
+
     [Header("Laser")]
     public LineRenderer leftLaserLine;
     public LineRenderer rightLaserLine;
@@ -956,41 +961,25 @@ public class BossController : MonoBehaviour
 
 
 
+    
     void SpawnFallingRocks()
     {
         if (fallingRockPrefab == null)
             return;
 
-        // Jumlah batu tetap 5.
+        // Jumlah batu yang muncul.
         const int rockCount = 1;
-
-        Collider2D bossCollider = GetComponent<Collider2D>();
 
         for (int i = 0; i < rockCount; i++)
         {
-            float spawnX;
-            float spawnY;
-
-            if (bossCollider != null)
-            {
-                Bounds bounds = bossCollider.bounds;
-
-                spawnX = Random.Range(
-                    bounds.min.x,
-                    bounds.max.x
-                );
-
-                spawnY = bounds.max.y + Random.Range(1.5f, 3.5f);
-            }
-            else
-            {
-                spawnX = transform.position.x + Random.Range(-3f, 3f);
-                spawnY = transform.position.y + 4f;
-            }
+            float randomX = Random.Range(
+                fallingRockMinX,
+                fallingRockMaxX
+            );
 
             Vector3 spawnPosition = new Vector3(
-                spawnX,
-                spawnY,
+                randomX,
+                fallingRockSpawnY,
                 transform.position.z
             );
 
@@ -999,9 +988,9 @@ public class BossController : MonoBehaviour
                 spawnPosition,
                 Quaternion.identity
             );
-            ThrownObjectCollision.instance.canHitBoss = false;
         }
     }
+
 
     IEnumerator BossIntroSequence()
     {

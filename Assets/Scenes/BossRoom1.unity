@@ -1655,9 +1655,10 @@ MonoBehaviour:
   leftLaserOrigin: {fileID: 643638436}
   rightLaserOrigin: {fileID: 974103805}
   player: {fileID: 1545085702}
-  fallingRockSpawnPoints:
-  - {fileID: 5330569852289347836, guid: 4ab7ad72a1dd6894b86ae443bceb902f, type: 3}
   fallingRockPrefab: {fileID: 2928360409177833084, guid: 4ab7ad72a1dd6894b86ae443bceb902f, type: 3}
+  fallingRockMinX: -10
+  fallingRockMaxX: 17.5
+  fallingRockSpawnY: 6
   leftLaserLine: {fileID: 1690261632}
   rightLaserLine: {fileID: 276795345}
   laserChargeTime: 1
@@ -1702,7 +1703,8 @@ MonoBehaviour:
   handShakeDuration: 0.4
   handShakeAmount: 0.12
   handShakeSpeed: 30
-  handSlamDistance: 1.5
+  slamGroundOffset: 0
+  slamRaycastDistance: 100
   handRaiseDuration: 0.3
   handSlamDuration: 0.12
   handReturnDuration: 0.35
@@ -2844,11 +2846,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5284070664677785813, guid: 265a07840072a3a44b0876e24c80d4de, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.87
+      value: 4.05
       objectReference: {fileID: 0}
     - target: {fileID: 5284070664677785813, guid: 265a07840072a3a44b0876e24c80d4de, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 5.81
+      value: 6.05
       objectReference: {fileID: 0}
     - target: {fileID: 5284070664677785813, guid: 265a07840072a3a44b0876e24c80d4de, type: 3}
       propertyPath: m_LocalPosition.z

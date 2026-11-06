@@ -60,6 +60,7 @@ public class DashController : MonoBehaviour
             cameraFollow =
                 FindAnyObjectByType<CameraFollow>();
         }
+        cooldownTimer = 3.8f;
     }
 
     void Update()
