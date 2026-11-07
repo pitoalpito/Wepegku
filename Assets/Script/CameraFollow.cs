@@ -55,7 +55,7 @@ public class CameraFollow : MonoBehaviour
             return;
         }
 
-        Debug.Log("Player Position: " + player.position);
+        // Debug.Log("Player Position: " + player.position);
 
         // Smooth zoom
         cam.orthographicSize = Mathf.Lerp(

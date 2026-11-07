@@ -10,6 +10,7 @@ public class BasicAttack : MonoBehaviour
     public KeyCode uppercutKey = KeyCode.K;
     public float attackDuration = 0.15f;
     public int attackDamage = 10;
+    public float attackCooldown = 0.3f;
 
     [Header("Hitbox Settings")]
     public Transform attackHitbox;
@@ -20,12 +21,16 @@ public class BasicAttack : MonoBehaviour
     public float hitboxOffsetX = 0.8f;
     public float hitboxOffsetY = 0f;
 
+    [Header("Boss Reference")]
+    public BossController bossController;
+
     [Header("Debug Visual")]
     public Color hitboxColor = new Color(1f, 0f, 0f, 0.5f);
 
     private int facingDirection = 1;
     private Coroutine attackCoroutine;
     private Vector3 initialLocalPosition;
+    private float nextAttackTime;
 
     private readonly HashSet<EnemyHitReaction> hitEnemies =
         new HashSet<EnemyHitReaction>();
@@ -33,10 +38,11 @@ public class BasicAttack : MonoBehaviour
     private readonly HashSet<EnemyProjectile> hitProjectiles =
         new HashSet<EnemyProjectile>();
 
-    // Tambahan: mencegah tangan boss terkena damage berkali-kali
-    // dalam satu serangan.
     private readonly HashSet<BossHand> hitBossHands =
         new HashSet<BossHand>();
+
+    private readonly HashSet<BossHead> hitBossHeads =
+        new HashSet<BossHead>();
 
     public EnemyHitReaction.AttackType CurrentAttackType
     {
@@ -107,6 +113,13 @@ public class BasicAttack : MonoBehaviour
         if (attackCollider == null)
             return;
 
+        // Cek cooldown.
+        if (Time.time < nextAttackTime)
+            return;
+
+        // Mulai cooldown.
+        nextAttackTime = Time.time + attackCooldown;
+
         CurrentAttackType = attackType;
 
         if (attackCoroutine != null)
@@ -123,6 +136,7 @@ public class BasicAttack : MonoBehaviour
         hitEnemies.Clear();
         hitProjectiles.Clear();
         hitBossHands.Clear();
+        hitBossHeads.Clear();
 
         UpdateHitboxPosition();
 
@@ -179,6 +193,7 @@ public class BasicAttack : MonoBehaviour
                     if (hitProjectiles.Add(projectile))
                     {
                         projectile.ReflectBack();
+
                         Debug.Log(
                             "Projectile terdeteksi dan ReflectBack dipanggil!",
                             projectile
@@ -188,8 +203,28 @@ public class BasicAttack : MonoBehaviour
                     continue;
                 }
 
-                // 2. Cek tangan boss.
-                BossHand bossHand = hit.GetComponent<BossHand>();
+                // 2. Cek kepala boss.
+                BossHead bossHead =
+                    hit.GetComponentInParent<BossHead>();
+
+                if (bossHead != null)
+                {
+                    if (hitBossHeads.Add(bossHead))
+                    {
+                        bossHead.TakeDamage(attackDamage);
+
+                        Debug.Log(
+                            "Kepala boss terkena serangan!",
+                            bossHead
+                        );
+                    }
+
+                    continue;
+                }
+
+                // 3. Cek tangan boss.
+                BossHand bossHand =
+                    hit.GetComponent<BossHand>();
 
                 if (bossHand == null)
                     bossHand = hit.GetComponentInParent<BossHand>();
@@ -211,7 +246,7 @@ public class BasicAttack : MonoBehaviour
                     continue;
                 }
 
-                // 3. Sistem enemy biasa tetap berjalan.
+                // 4. Sistem enemy biasa.
                 EnemyHitReaction target =
                     hit.GetComponent<EnemyHitReaction>();
 
@@ -277,5 +312,6 @@ public class BasicAttack : MonoBehaviour
         hitEnemies.Clear();
         hitProjectiles.Clear();
         hitBossHands.Clear();
+        hitBossHeads.Clear();
     }
 }

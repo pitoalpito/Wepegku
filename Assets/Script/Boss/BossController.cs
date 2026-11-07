@@ -15,6 +15,9 @@ public class BossController : MonoBehaviour
         SlamTelegraph,
         SlamAttack,
         SlamRecovery,
+        HeadSlamTelegraph,
+        HeadSlamAttack,
+        HeadStunned,
         PhaseTransition,
         Dead
     }
@@ -98,6 +101,7 @@ public class BossController : MonoBehaviour
     public GameObject projectilePrefab;
     public Transform leftProjectileSpawn;
     public Transform rightProjectileSpawn;
+    public Transform mouthProjectileSpawn;
     public int volleyCountPhaseOne = 3;
     public int volleyCountPhaseTwo = 5;
     public float projectileInterval = 0.3f;
@@ -132,6 +136,27 @@ public class BossController : MonoBehaviour
     [Header("Rock Counter")]
     public int rockDamage = 40;
 
+    [Header("Phase 2 - Head Slam")]
+    public Transform headRoot;
+    public Collider2D headCollider;
+    public float headRaiseHeight = 0.8f;
+    public float headRaiseDuration = 0.35f;
+    public float headSlamDuration = 0.15f;
+    public float headReturnDuration = 0.4f;
+    public float headStunDuration = 3f;
+    public float headSlamGroundOffset = 0f;
+    public float headSlamRaycastDistance = 100f;
+    public float headShakeDuration = 0.35f;
+    public float headShakeAmount = 0.08f;
+    public float headShakeSpeed = 30f;
+    public int headDamage = 20;
+
+    private Vector3 headStartPosition;
+    private bool headCanBeDamaged;
+
+    public bool IsHeadVulnerable => headCanBeDamaged;
+    public bool IsHeadSlamming => currentState == BossState.HeadSlamAttack;
+
     public BossState currentState = BossState.Intro;
 
     private Coroutine bossRoutine;
@@ -161,6 +186,12 @@ public class BossController : MonoBehaviour
     public void OnHandDefeated(BossHand hand)
     {
         Debug.Log(hand.name + " telah dikalahkan!");
+
+        if (leftHand != null && rightHand != null &&
+            leftHand.IsDefeated && rightHand.IsDefeated)
+        {
+            Debug.Log("Kedua tangan telah dikalahkan. Boss akan memasuki Phase 2.");
+        }
     }
 
     void Start()
@@ -172,6 +203,12 @@ public class BossController : MonoBehaviour
 
         if (rightHandRoot != null)
             rightHandStartPosition = rightHandRoot.localPosition;
+
+        if (headRoot != null)
+            headStartPosition = headRoot.localPosition;
+
+        if (headCollider != null)
+            headCollider.isTrigger = true;
 
         if (leftEyeVisual != null)
             leftEyeOriginalScale = leftEyeVisual.localScale;
@@ -227,47 +264,50 @@ public class BossController : MonoBehaviour
     IEnumerator BossLoop()
     {
         currentState = BossState.Intro;
-
         yield return new WaitForSeconds(1f);
 
         while (!isDead)
         {
-            // Phase 1 = 5 pasang serangan
-            // Phase 2 = 10 pasang serangan
-            int attackPairs = phase == 1 ? 5 : 10;
+            // Phase 1 berakhir segera setelah kedua tangan dikalahkan.
+            if (phase == 1 && AreBothHandsDefeated())
+            {
+                yield return StartCoroutine(EnterPhaseTwo());
+                continue;
+            }
+
+            int attackPairs = 5;
 
             for (int i = 0; i < attackPairs; i++)
             {
                 if (isDead)
                     yield break;
 
+                if (phase == 1 && AreBothHandsDefeated())
+                    break;
+
                 Debug.Log(
                     "Phase " + phase +
-                    " - Pasangan serangan " +
-                    (i + 1) + "/" + attackPairs
+                    " - Pasangan serangan " + (i + 1) + "/" + attackPairs
                 );
 
-                // 1. Missile
+                // 1. Projectile: tangan pada Phase 1, mulut pada Phase 2.
                 yield return StartCoroutine(ProjectileVolley());
+                if (isDead) yield break;
 
-                if (isDead)
-                    yield break;
+                if (phase == 1 && AreBothHandsDefeated())
+                    break;
 
-                // Jeda pergantian serangan.
-                // Phase 2 berganti lebih cepat.
                 float attackGap = phase == 1 ? 0.3f : 0.1f;
                 yield return new WaitForSeconds(attackGap);
+                if (isDead) yield break;
 
-                if (isDead)
-                    yield break;
-
-                // 2. Laser
+                // 2. Laser mata tetap digunakan pada kedua fase.
                 yield return StartCoroutine(EyeLaserAttack());
+                if (isDead) yield break;
 
-                if (isDead)
-                    yield break;
+                if (phase == 1 && AreBothHandsDefeated())
+                    break;
 
-                // Jeda sebelum pasangan serangan berikutnya.
                 float pairGap = phase == 1 ? 0.4f : 0.15f;
                 yield return new WaitForSeconds(pairGap);
             }
@@ -275,24 +315,30 @@ public class BossController : MonoBehaviour
             if (isDead)
                 yield break;
 
-            // Semua pasangan serangan selesai.
-            // Sekarang boss melakukan Ground Slam.
-            yield return StartCoroutine(GroundSlam());
-
-            if (isDead)
-                yield break;
-
-            // Transisi Phase 1 ke Phase 2.
-            if (phase == 1 && currentHealth <= maxHealth / 2)
+            if (phase == 1)
             {
-                yield return StartCoroutine(EnterPhaseTwo());
+                if (AreBothHandsDefeated())
+                {
+                    yield return StartCoroutine(EnterPhaseTwo());
+                    continue;
+                }
 
-                if (isDead)
-                    yield break;
+                // Ground Slam hanya untuk Phase 1.
+                yield return StartCoroutine(GroundSlam());
+            }
+            else
+            {
+                // Phase 2 menggunakan Head Slam sebagai serangan penutup pola.
+                yield return StartCoroutine(HeadSlam());
             }
         }
     }
 
+    bool AreBothHandsDefeated()
+    {
+        return leftHand != null && rightHand != null &&
+               leftHand.IsDefeated && rightHand.IsDefeated;
+    }
 
     IEnumerator EnterPhaseTwo()
     {
@@ -690,13 +736,50 @@ public class BossController : MonoBehaviour
             if (isDead)
                 yield break;
 
-            if (leftHand != null && !leftHand.IsDefeated)
-                FireProjectile(leftProjectileSpawn, leftHand);
+            if (phase == 1)
+            {
+                if (leftHand != null && !leftHand.IsDefeated)
+                    FireProjectile(leftProjectileSpawn, leftHand);
 
-            if (rightHand != null && !rightHand.IsDefeated)
-                FireProjectile(rightProjectileSpawn, rightHand);
+                if (rightHand != null && !rightHand.IsDefeated)
+                    FireProjectile(rightProjectileSpawn, rightHand);
+            }
+            else
+            {
+                FireMouthProjectile();
+            }
 
             yield return new WaitForSeconds(projectileInterval);
+        }
+    }
+
+    void FireMouthProjectile()
+    {
+        if (projectilePrefab == null || mouthProjectileSpawn == null || player == null)
+            return;
+
+        Vector2 direction =
+            ((Vector2)player.position - (Vector2)mouthProjectileSpawn.position).normalized;
+
+        GameObject bullet = Instantiate(
+            projectilePrefab,
+            mouthProjectileSpawn.position,
+            Quaternion.identity
+        );
+
+        BossProjectile projectile = bullet.GetComponent<BossProjectile>();
+        if (projectile != null)
+        {
+            projectile.Launch(
+                direction,
+                projectileSpeed,
+                projectileDamage,
+                gameObject,
+                false
+            );
+
+            if (cameraVignette != null)
+                cameraVignette.TriggerVignette();
         }
     }
 
@@ -969,6 +1052,193 @@ public class BossController : MonoBehaviour
 
 
     
+    IEnumerator HeadSlam()
+    {
+        if (headRoot == null)
+        {
+            Debug.LogWarning("Head Root belum diatur pada BossController!");
+            yield break;
+        }
+
+        StopBossMovement();
+        headCanBeDamaged = false;
+        currentState = BossState.HeadSlamTelegraph;
+
+        Vector3 raisedPosition = headStartPosition + Vector3.up * headRaiseHeight;
+
+        // Saat kepala terangkat dan bergetar, boss bergerak cepat ke arah player.
+        // Gerakan boss dan getaran kepala berlangsung bersamaan.
+        BossFollowPlayer follow = bossMovementScript as BossFollowPlayer;
+        Transform movementRoot = follow != null ? follow.movementRoot : null;
+
+        Vector3 bossStartPosition = movementRoot != null
+            ? movementRoot.position
+            : Vector3.zero;
+
+        float bossTargetX = bossStartPosition.x;
+
+        if (movementRoot != null && player != null)
+        {
+            bossTargetX = Mathf.Clamp(
+                player.position.x + follow.followOffsetX,
+                follow.minX,
+                follow.maxX
+            );
+        }
+
+        float preparationDuration = headRaiseDuration + headShakeDuration;
+        float preparationTimer = 0f;
+
+        while (preparationTimer < preparationDuration && !isDead)
+        {
+            float deltaTime = Time.deltaTime;
+            preparationTimer += deltaTime;
+
+            // Boss bergerak menuju posisi player, tetapi tetap pada Y dan Z semula.
+            if (movementRoot != null)
+            {
+                float bossT = Mathf.Clamp01(preparationTimer / preparationDuration);
+                bossT = Mathf.SmoothStep(0f, 1f, bossT);
+
+                Vector3 bossPosition = movementRoot.position;
+                bossPosition.x = Mathf.Lerp(bossStartPosition.x, bossTargetX, bossT);
+                movementRoot.position = bossPosition;
+            }
+
+            // Kepala naik terlebih dahulu, kemudian bergetar saat boss terus bergerak.
+            if (preparationTimer <= headRaiseDuration)
+            {
+                float raiseT = headRaiseDuration > 0f
+                    ? Mathf.Clamp01(preparationTimer / headRaiseDuration)
+                    : 1f;
+                raiseT = Mathf.SmoothStep(0f, 1f, raiseT);
+                headRoot.localPosition = Vector3.Lerp(headStartPosition, raisedPosition, raiseT);
+            }
+            else
+            {
+                float shakeTimer = preparationTimer - headRaiseDuration;
+                float shakeX = Mathf.Sin(shakeTimer * headShakeSpeed) * headShakeAmount;
+                headRoot.localPosition = raisedPosition + new Vector3(shakeX, 0f, 0f);
+            }
+
+            yield return null;
+        }
+
+        if (isDead) yield break;
+
+        if (movementRoot != null)
+        {
+            Vector3 finalBossPosition = movementRoot.position;
+            finalBossPosition.x = bossTargetX;
+            movementRoot.position = finalBossPosition;
+        }
+
+        headRoot.localPosition = raisedPosition;
+
+        // Hitung ulang posisi tanah setelah kepala bergerak ke arah player.
+        Vector3 slamTarget = GetHeadSlamTarget();
+        currentState = BossState.HeadSlamAttack;
+        yield return StartCoroutine(MoveHead(slamTarget, headSlamDuration));
+        headRoot.GetComponent<BossHead>()?.ResetSlamDamage();
+
+        //SFX bisa ditaruh disini
+        //VFX bisa ditaruh disini
+        if (isDead) yield break;
+
+        // Kepala diam di bawah dan dapat menerima serangan pemain.
+        headCanBeDamaged = true;
+        currentState = BossState.HeadStunned;
+        Debug.Log("Boss terkena stun! Serang kepalanya sekarang!");
+
+        float stunTimer = 0f;
+        while (stunTimer < headStunDuration && !isDead)
+        {
+            stunTimer += Time.deltaTime;
+            yield return null;
+        }
+
+        headCanBeDamaged = false;
+
+        if (isDead) yield break;
+
+        yield return StartCoroutine(MoveHead(headStartPosition, headReturnDuration));
+        ResumeBossMovement();
+    }
+
+    Vector3 GetHeadSlamTarget()
+    {
+        RaycastHit2D[] hits = Physics2D.RaycastAll(
+            headRoot.position,
+            Vector2.down,
+            headSlamRaycastDistance
+        );
+
+        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+        foreach (RaycastHit2D hit in hits)
+        {
+            if (hit.collider == null)
+                continue;
+
+            // Abaikan collider boss sendiri.
+            if (hit.collider.transform == transform ||
+                hit.collider.transform.IsChildOf(transform))
+                continue;
+
+            if (hit.collider.CompareTag("Ground"))
+            {
+                Vector3 worldTarget = new Vector3(
+                    headRoot.position.x,
+                    hit.point.y + headSlamGroundOffset,
+                    headRoot.position.z
+                );
+
+                return headRoot.parent != null
+                    ? headRoot.parent.InverseTransformPoint(worldTarget)
+                    : worldTarget;
+            }
+        }
+
+        Debug.LogWarning("Ground tidak ditemukan di bawah Head!");
+        return headStartPosition;
+    }
+
+    IEnumerator MoveHead(Vector3 target, float duration)
+    {
+        Vector3 start = headRoot.localPosition;
+        float timer = 0f;
+
+        while (timer < duration && !isDead)
+        {
+            float t = duration > 0f ? Mathf.Clamp01(timer / duration) : 1f;
+            t = Mathf.SmoothStep(0f, 1f, t);
+            headRoot.localPosition = Vector3.Lerp(start, target, t);
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        if (!isDead)
+            headRoot.localPosition = target;
+    }
+
+    public bool IsHeadCollider(Collider2D targetCollider)
+    {
+        if (targetCollider == null || headRoot == null)
+            return false;
+
+        Transform target = targetCollider.transform;
+        return target == headRoot || target.IsChildOf(headRoot);
+    }
+
+    public void DamageHead(int damage)
+    {
+        if (isDead || !headCanBeDamaged || damage <= 0)
+            return;
+
+        Debug.Log("Kepala boss terkena serangan! Damage: " + damage);
+        DamageBoss(damage);
+    }
+
     void SpawnFallingRocks()
     {
         if (fallingRockPrefab == null)

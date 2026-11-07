@@ -165,7 +165,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 579e003e36c6c72409ffb8ed44a06999, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossHand
-  maxHealth: 1000
+  maxHealth: 25
   currentHealth: 0
   bossController: {fileID: 1121466760}
   spriteRenderer: {fileID: 1830853735}
@@ -946,6 +946,10 @@ PrefabInstance:
       propertyPath: cameraFollow
       value: 
       objectReference: {fileID: 207928056}
+    - target: {fileID: 5878397998900162894, guid: c10a76e99477c004280b8179ebb32bdd, type: 3}
+      propertyPath: bossController
+      value: 
+      objectReference: {fileID: 1121466760}
     - target: {fileID: 7350829587677491497, guid: c10a76e99477c004280b8179ebb32bdd, type: 3}
       propertyPath: m_Name
       value: Player
@@ -1240,6 +1244,8 @@ GameObject:
   m_Component:
   - component: {fileID: 806268010}
   - component: {fileID: 806268011}
+  - component: {fileID: 806268012}
+  - component: {fileID: 806268013}
   m_Layer: 0
   m_Name: Head
   m_TagString: Untagged
@@ -1324,6 +1330,62 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!58 &806268012
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 806268009}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 0.50000006
+--- !u!114 &806268013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 806268009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 380abba1492d480498eb62dfc80c118d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossHead
+  bossController: {fileID: 1121466760}
+  spriteRenderer: {fileID: 806268011}
+  headCollider: {fileID: 806268012}
+  hitColor: {r: 1, g: 1, b: 1, a: 1}
+  flashDuration: 0.08
+  knockbackDistance: 0.2
+  knockbackDuration: 0.08
+  fadeOutDuration: 0.15
 --- !u!1 &825594995 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7350829587677491497, guid: c10a76e99477c004280b8179ebb32bdd, type: 3}
@@ -1689,6 +1751,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 2878312760533645163, guid: e4d13fb1be253dd44b040027f2ee17f6, type: 3}
   leftProjectileSpawn: {fileID: 475515653}
   rightProjectileSpawn: {fileID: 251973956}
+  mouthProjectileSpawn: {fileID: 1886560428}
   volleyCountPhaseOne: 3
   volleyCountPhaseTwo: 5
   projectileInterval: 0.3
@@ -1709,6 +1772,19 @@ MonoBehaviour:
   handSlamDuration: 0.12
   handReturnDuration: 0.35
   rockDamage: 40
+  headRoot: {fileID: 806268010}
+  headCollider: {fileID: 806268012}
+  headRaiseHeight: 0.8
+  headRaiseDuration: 0.35
+  headSlamDuration: 0.15
+  headReturnDuration: 0.4
+  headStunDuration: 3
+  headSlamGroundOffset: 0
+  headSlamRaycastDistance: 100
+  headShakeDuration: 0.35
+  headShakeAmount: 0.08
+  headShakeSpeed: 30
+  headDamage: 20
   currentState: 0
   cameraFollow: {fileID: 207928056}
   bossIntroPanel: {fileID: 1914665250}
@@ -2247,7 +2323,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 579e003e36c6c72409ffb8ed44a06999, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossHand
-  maxHealth: 1000
+  maxHealth: 25
   currentHealth: 0
   bossController: {fileID: 1121466760}
   spriteRenderer: {fileID: 743606270}
