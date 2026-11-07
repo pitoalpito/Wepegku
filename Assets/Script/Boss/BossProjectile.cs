@@ -52,6 +52,7 @@ public class BossProjectile : MonoBehaviour
 
         SpawnProjectileVFX();
         SpawnTrailVFX();
+        //SFX bisa ditaruh disini
 
         Debug.Log("Boss projectile launched. Direction: " + direction);
     }

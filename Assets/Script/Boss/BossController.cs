@@ -512,6 +512,8 @@ public class BossController : MonoBehaviour
                 laserParticleWidth
             );
 
+            //taruh SFX laser disini
+
             damageTimer += Time.deltaTime;
 
             if (damageTimer >= laserDamageInterval)
@@ -807,6 +809,8 @@ public class BossController : MonoBehaviour
             )
         );
 
+        //SFX bisa ditaruh disini
+
         // 2. SHAKE: tangan bergetar sebelum menyerang
         float shakeTimer = 0f;
 
@@ -864,6 +868,9 @@ public class BossController : MonoBehaviour
 
         // 4. IMPACT: batu muncul saat tangan mencapai bawah
         SpawnFallingRocks();
+
+        //SFX bisa ditaruh disini
+        //VFX bisa ditaruh disini
 
         recoveryInterrupted = false;
 

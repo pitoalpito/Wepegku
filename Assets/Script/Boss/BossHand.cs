@@ -172,6 +172,7 @@ public class BossHand : MonoBehaviour
             if (handCollider != null)
                 handCollider.enabled = false;
             
+            //kasih efek animasi defeat disini
             // gameObject.SetActive(false);
 
             Debug.Log(name + " berhasil dikalahkan!");
