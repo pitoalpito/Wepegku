@@ -275,7 +275,7 @@ public class BossController : MonoBehaviour
                 continue;
             }
 
-            int attackPairs = 5;
+            int attackPairs = 3;
 
             for (int i = 0; i < attackPairs; i++)
             {
@@ -343,7 +343,8 @@ public class BossController : MonoBehaviour
     IEnumerator EnterPhaseTwo()
     {
         currentState = BossState.PhaseTransition;
-
+        //VFX phase transition disini
+        //SFX phase transition disini
         Debug.Log("Boss enters Phase 2!");
 
         yield return new WaitForSeconds(1.5f);
@@ -387,6 +388,10 @@ public class BossController : MonoBehaviour
                 StopCoroutine(bossRoutine);
 
             HideLasers();
+
+            //VFX mati disini
+            //SFX mati disini
+            //fungsi selanjutnya disini
 
             Debug.Log("Boss defeated!");
         }
