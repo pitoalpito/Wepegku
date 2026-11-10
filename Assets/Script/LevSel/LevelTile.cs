@@ -1,17 +1,21 @@
 
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class LevelTile : MonoBehaviour
 {
     public string sceneName = "BossRoom1";
 
     private bool playerNearby;
+    private CircleTransition transition;
+    private bool isLoading;
+
+    private void Start()
+    {
+        transition = FindFirstObjectByType<CircleTransition>();
+    }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log("Ada yang menyentuh tile: " + other.name);
-
         if (other.CompareTag("Player"))
         {
             playerNearby = true;
@@ -24,16 +28,22 @@ public class LevelTile : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             playerNearby = false;
-            Debug.Log("Player keluar area level.");
         }
     }
 
     private void Update()
     {
-        if (playerNearby && Input.GetKeyDown(KeyCode.J))
+        if (playerNearby && Input.GetKeyDown(KeyCode.J) && !isLoading)
         {
-            Debug.Log("J ditekan! Membuka scene: " + sceneName);
-            SceneManager.LoadScene(sceneName);
+            if (transition != null)
+            {
+                isLoading = true;
+                transition.LoadLevel(sceneName);
+            }
+            else
+            {
+                Debug.LogError("CircleTransition tidak ditemukan!");
+            }
         }
     }
 }

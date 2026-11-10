@@ -5,12 +5,15 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/HoldIt.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
   - enabled: 1
     path: Assets/Scenes/LevelSelection.unity
     guid: 45be01e8c596a1f419dbd1d8cad4003b
+  - enabled: 1
+    path: Assets/Scenes/Tutorial.unity
+    guid: 33fb242a40a84ce49a9cc9b4d94fd338
   - enabled: 1
     path: Assets/Scenes/BossRoom1.unity
     guid: 10638885679b7b343a824905f5fe137d
