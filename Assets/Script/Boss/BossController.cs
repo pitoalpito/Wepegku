@@ -165,6 +165,13 @@ public class BossController : MonoBehaviour
 
     [Header("Boss Intro")]
     public CameraFollow cameraFollow;
+
+    [Header("Boss Screen Shake")]
+    public float groundSlamShakeIntensity = 0.3f;
+    public float groundSlamShakeDuration = 0.2f;
+    public float headSlamShakeIntensity = 0.4f;
+    public float headSlamShakeDuration = 0.25f;
+
     public GameObject bossIntroPanel;
 
     public TMP_Text bossNameText;
@@ -181,6 +188,12 @@ public class BossController : MonoBehaviour
     public MonoBehaviour bossMovementScript;
 
     private bool bossMovementWasEnabled;
+
+    [Header("Boss VFX Prefabs")]
+    public ParticleSystem phaseTransitionVFXPrefab;
+    public ParticleSystem bossDeathVFXPrefab;
+    public ParticleSystem groundSlamVFXPrefab;
+    public ParticleSystem headSlamVFXPrefab;
 
 
     public void OnHandDefeated(BossHand hand)
@@ -343,7 +356,10 @@ public class BossController : MonoBehaviour
     IEnumerator EnterPhaseTwo()
     {
         currentState = BossState.PhaseTransition;
-        //VFX phase transition disini
+
+        // LOKASI SPAWN VFX: posisi root boss saat transisi ke Phase 2.
+        SpawnVFX(phaseTransitionVFXPrefab, transform.position);
+
         //SFX phase transition disini
         Debug.Log("Boss enters Phase 2!");
 
@@ -389,7 +405,9 @@ public class BossController : MonoBehaviour
 
             HideLasers();
 
-            //VFX mati disini
+            // LOKASI SPAWN VFX: posisi root boss saat boss kalah.
+            SpawnVFX(bossDeathVFXPrefab, transform.position);
+
             //SFX mati disini
             //fungsi selanjutnya disini
 
@@ -957,8 +975,23 @@ public class BossController : MonoBehaviour
         // 4. IMPACT: batu muncul saat tangan mencapai bawah
         SpawnFallingRocks();
 
+        // LOKASI SPAWN VFX: posisi masing-masing tangan saat menghantam tanah.
+        if (leftHandRoot != null)
+            SpawnVFX(groundSlamVFXPrefab, leftHandRoot.position);
+
+        if (rightHandRoot != null)
+            SpawnVFX(groundSlamVFXPrefab, rightHandRoot.position);
+
+        // Camera shake saat kedua tangan menghantam tanah.
+        if (cameraFollow != null)
+        {
+            cameraFollow.TriggerShake(
+                groundSlamShakeIntensity,
+                groundSlamShakeDuration
+            );
+        }
+
         //SFX bisa ditaruh disini
-        //VFX bisa ditaruh disini
 
         recoveryInterrupted = false;
 
@@ -1146,8 +1179,19 @@ public class BossController : MonoBehaviour
         yield return StartCoroutine(MoveHead(slamTarget, headSlamDuration));
         headRoot.GetComponent<BossHead>()?.ResetSlamDamage();
 
+        // LOKASI SPAWN VFX: posisi kepala tepat setelah menghantam tanah.
+        SpawnVFX(headSlamVFXPrefab, headRoot.position);
+
+        // Camera shake saat kepala menghantam tanah.
+        if (cameraFollow != null)
+        {
+            cameraFollow.TriggerShake(
+                headSlamShakeIntensity,
+                headSlamShakeDuration
+            );
+        }
+
         //SFX bisa ditaruh disini
-        //VFX bisa ditaruh disini
         if (isDead) yield break;
 
         // Kepala diam di bawah dan dapat menerima serangan pemain.
@@ -1479,5 +1523,25 @@ public class BossController : MonoBehaviour
             true,
             ParticleSystemStopBehavior.StopEmittingAndClear
         );
+    }
+
+    // Template untuk memunculkan VFX sekali pakai di posisi tertentu.
+    void SpawnVFX(ParticleSystem prefab, Vector3 spawnPosition)
+    {
+        if (prefab == null)
+            return;
+
+        ParticleSystem vfx = Instantiate(
+            prefab,
+            spawnPosition,
+            Quaternion.identity
+        );
+
+        // Hancurkan instance setelah seluruh particle selesai.
+        ParticleSystem.MainModule main = vfx.main;
+        main.loop = false;
+        main.stopAction = ParticleSystemStopAction.Destroy;
+
+        vfx.Play();
     }
 }
