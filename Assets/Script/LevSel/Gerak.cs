@@ -11,6 +11,7 @@ public class OverworldPlayer : MonoBehaviour
 
     private void Awake()
     {
+        Time.timeScale = 1f; // Pastikan waktu berjalan normal saat memulai
         rb = GetComponent<Rigidbody2D>();
     }
 
