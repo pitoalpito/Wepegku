@@ -209,7 +209,6 @@ public class BossController : MonoBehaviour
 
     void Start()
     {
-        Time.timeScale = 1f; // Pastikan waktu berjalan normal saat memulai
         currentHealth = maxHealth;
 
         if (leftHandRoot != null)
@@ -411,7 +410,7 @@ public class BossController : MonoBehaviour
 
             //SFX mati disini
             //fungsi selanjutnya disini
-            ResultUI.Instance.MenangUI();
+
             Debug.Log("Boss defeated!");
         }
     }

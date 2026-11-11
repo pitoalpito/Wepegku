@@ -90,7 +90,7 @@ public class PlayerHealth : MonoBehaviour
     {
         IsDead = true;
         Debug.Log("Player defeated!");
-        ResultUI.Instance.KalahUI();
+
         // Nanti bisa disambungkan ke animasi mati
         // atau sistem Game Over.
     }

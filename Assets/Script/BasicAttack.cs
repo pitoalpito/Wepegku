@@ -21,12 +21,6 @@ public class BasicAttack : MonoBehaviour
     public float hitboxOffsetX = 0.8f;
     public float hitboxOffsetY = 0f;
 
-    [Header("Attack VFX")]
-    public GameObject basicAttackVFXPrefab;
-    public GameObject uppercutVFXPrefab;
-    public Transform attackVFXPoint;
-    public Vector2 attackVFXOffset = new Vector2(0.5f, 0f);
-
     [Header("Boss Reference")]
     public BossController bossController;
 
@@ -127,9 +121,6 @@ public class BasicAttack : MonoBehaviour
         nextAttackTime = Time.time + attackCooldown;
 
         CurrentAttackType = attackType;
-
-        // Spawn VFX sesuai jenis serangan.
-        SpawnAttackVFX(attackType);
 
         if (attackCoroutine != null)
         {
@@ -290,49 +281,6 @@ public class BasicAttack : MonoBehaviour
             hitboxRenderer.enabled = false;
 
         attackCoroutine = null;
-    }
-
-    void SpawnAttackVFX(EnemyHitReaction.AttackType attackType)
-    {
-        GameObject selectedVFX = null;
-
-        // Pilih prefab berdasarkan jenis serangan.
-        if (attackType == EnemyHitReaction.AttackType.Basic)
-        {
-            selectedVFX = basicAttackVFXPrefab;
-        }
-        else if (attackType == EnemyHitReaction.AttackType.Uppercut)
-        {
-            selectedVFX = uppercutVFXPrefab;
-        }
-
-        if (selectedVFX == null)
-            return;
-
-        // Tentukan titik kemunculan VFX.
-        Transform spawnPoint = attackVFXPoint != null
-            ? attackVFXPoint
-            : attackHitbox;
-
-        if (spawnPoint == null)
-            return;
-
-        Vector3 spawnPosition = spawnPoint.position;
-
-        spawnPosition.x += attackVFXOffset.x * facingDirection;
-        spawnPosition.y += attackVFXOffset.y;
-
-        // Buat VFX.
-        GameObject vfx = Instantiate(
-            selectedVFX,
-            spawnPosition,
-            Quaternion.identity
-        );
-
-        // Sesuaikan arah VFX dengan arah pemain.
-        Vector3 scale = vfx.transform.localScale;
-        scale.x *= facingDirection;
-        vfx.transform.localScale = scale;
     }
 
     void UpdateHitboxPosition()
