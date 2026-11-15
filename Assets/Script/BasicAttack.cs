@@ -38,6 +38,8 @@ public class BasicAttack : MonoBehaviour
     private Vector3 initialLocalPosition;
     private float nextAttackTime;
 
+    private PlayerMovement playerMovement;
+
     private readonly HashSet<EnemyHitReaction> hitEnemies =
         new HashSet<EnemyHitReaction>();
 
@@ -58,6 +60,16 @@ public class BasicAttack : MonoBehaviour
 
     void Start()
     {
+        // Ambil PlayerMovement dari GameObject yang sama.
+        playerMovement = GetComponent<PlayerMovement>();
+
+        if (playerMovement == null)
+        {
+            Debug.LogError("PlayerMovement tidak ditemukan!", this);
+            enabled = false;
+            return;
+        }
+
         if (attackHitbox == null)
         {
             Debug.LogError("AttackHitbox belum dipasang!", this);
@@ -95,29 +107,49 @@ public class BasicAttack : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKey(KeyCode.A) ||
-            Input.GetKey(KeyCode.LeftArrow))
-        {
-            facingDirection = -1;
-        }
+        // Ambil arah gerakan pemain.
+        UpdateFacingDirection();
 
-        if (Input.GetKey(KeyCode.D) ||
-            Input.GetKey(KeyCode.RightArrow))
-        {
-            facingDirection = 1;
-        }
-
+        // Serangan Basic.
         if (Input.GetKeyDown(attackKey))
             StartAttack(EnemyHitReaction.AttackType.Basic);
 
+        // Serangan Uppercut.
         if (Input.GetKeyDown(uppercutKey))
             StartAttack(EnemyHitReaction.AttackType.Uppercut);
+    }
+
+    void LateUpdate()
+    {
+        // Pastikan hitbox selalu mengikuti arah gerakan terakhir.
+        UpdateFacingDirection();
+        UpdateHitboxPosition();
+    }
+
+    void UpdateFacingDirection()
+    {
+        if (playerMovement == null)
+            return;
+
+        float moveInput = playerMovement.MoveInput;
+
+        if (moveInput > 0.01f)
+        {
+            facingDirection = 1;
+        }
+        else if (moveInput < -0.01f)
+        {
+            facingDirection = -1;
+        }
     }
 
     void StartAttack(EnemyHitReaction.AttackType attackType)
     {
         if (attackCollider == null)
             return;
+
+        // Perbarui arah sebelum menyerang.
+        UpdateFacingDirection();
 
         // Cek cooldown.
         if (Time.time < nextAttackTime)
@@ -200,7 +232,6 @@ public class BasicAttack : MonoBehaviour
                     {
                         projectile.ReflectBack();
 
-                        // VFX muncul ketika projectile berhasil di-reflect.
                         SpawnAttackVFX(CurrentAttackType);
 
                         Debug.Log(
@@ -222,7 +253,6 @@ public class BasicAttack : MonoBehaviour
                     {
                         bossHead.TakeDamage(attackDamage);
 
-                        // VFX muncul ketika kepala boss terkena serangan.
                         SpawnAttackVFX(CurrentAttackType);
 
                         Debug.Log(
@@ -248,7 +278,6 @@ public class BasicAttack : MonoBehaviour
                     {
                         bossHand.TakeDamage(attackDamage);
 
-                        // VFX muncul ketika tangan boss terkena serangan.
                         SpawnAttackVFX(CurrentAttackType);
 
                         Debug.Log(
@@ -284,7 +313,6 @@ public class BasicAttack : MonoBehaviour
                 if (enemyHealth != null && !enemyHealth.IsDead)
                     enemyHealth.TakeDamage(attackDamage);
 
-                // VFX muncul ketika enemy terkena serangan.
                 SpawnAttackVFX(CurrentAttackType);
             }
 
