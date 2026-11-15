@@ -128,9 +128,6 @@ public class BasicAttack : MonoBehaviour
 
         CurrentAttackType = attackType;
 
-        // Spawn VFX sesuai jenis serangan.
-        SpawnAttackVFX(attackType);
-
         if (attackCoroutine != null)
         {
             StopCoroutine(attackCoroutine);
@@ -203,6 +200,9 @@ public class BasicAttack : MonoBehaviour
                     {
                         projectile.ReflectBack();
 
+                        // VFX muncul ketika projectile berhasil di-reflect.
+                        SpawnAttackVFX(CurrentAttackType);
+
                         Debug.Log(
                             "Projectile terdeteksi dan ReflectBack dipanggil!",
                             projectile
@@ -221,6 +221,9 @@ public class BasicAttack : MonoBehaviour
                     if (hitBossHeads.Add(bossHead))
                     {
                         bossHead.TakeDamage(attackDamage);
+
+                        // VFX muncul ketika kepala boss terkena serangan.
+                        SpawnAttackVFX(CurrentAttackType);
 
                         Debug.Log(
                             "Kepala boss terkena serangan!",
@@ -244,6 +247,9 @@ public class BasicAttack : MonoBehaviour
                         !bossHand.IsDefeated)
                     {
                         bossHand.TakeDamage(attackDamage);
+
+                        // VFX muncul ketika tangan boss terkena serangan.
+                        SpawnAttackVFX(CurrentAttackType);
 
                         Debug.Log(
                             "Tangan boss terkena serangan! Damage: " +
@@ -277,6 +283,9 @@ public class BasicAttack : MonoBehaviour
 
                 if (enemyHealth != null && !enemyHealth.IsDead)
                     enemyHealth.TakeDamage(attackDamage);
+
+                // VFX muncul ketika enemy terkena serangan.
+                SpawnAttackVFX(CurrentAttackType);
             }
 
             elapsed += Time.deltaTime;
