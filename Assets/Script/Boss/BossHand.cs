@@ -12,6 +12,10 @@ public class BossHand : MonoBehaviour
     public SpriteRenderer spriteRenderer;
     public Collider2D handCollider;
 
+    [Header("Hand Sprites")]
+    public Sprite defaultSprite;
+    public Sprite groundSlamSprite;
+
     [Header("Hit Reaction")]
     public Color hitColor = Color.white;
     public float flashDuration = 0.08f;
@@ -59,6 +63,16 @@ public class BossHand : MonoBehaviour
         // Posisi awal parent tangan.
         if (handRoot != null)
             originalHandRootPosition = handRoot.localPosition;
+    }
+
+    public void SetGroundSlamSprite(bool active)
+    {
+        if (spriteRenderer == null)
+            return;
+
+        spriteRenderer.sprite = active
+            ? groundSlamSprite
+            : defaultSprite;
     }
 
     // =========================================

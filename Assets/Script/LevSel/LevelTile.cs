@@ -3,15 +3,48 @@ using UnityEngine;
 
 public class LevelTile : MonoBehaviour
 {
+    [Header("Level Settings")]
     public string sceneName = "BossRoom1";
+    public int levelIndex = 0;
+
+    [Header("Sprites")]
+    public SpriteRenderer spriteRenderer;
+    public Sprite defaultSprite;
+    public Sprite selectedSprite;
+    public Sprite lockedSprite;
 
     private bool playerNearby;
     private CircleTransition transition;
     private bool isLoading;
+    private bool isUnlocked;
 
     private void Start()
     {
         transition = FindFirstObjectByType<CircleTransition>();
+
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponent<SpriteRenderer>();
+
+        CheckUnlock();
+        UpdateSprite();
+    }
+
+    private void CheckUnlock()
+    {
+        isUnlocked = LevelProgress.IsLevelUnlocked(levelIndex);
+    }
+
+    private void UpdateSprite()
+    {
+        if (spriteRenderer == null)
+            return;
+
+        if (!isUnlocked)
+            spriteRenderer.sprite = lockedSprite;
+        else if (playerNearby)
+            spriteRenderer.sprite = selectedSprite;
+        else
+            spriteRenderer.sprite = defaultSprite;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -19,7 +52,12 @@ public class LevelTile : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             playerNearby = true;
-            Debug.Log("Player masuk area level! Tekan J.");
+            UpdateSprite();
+
+            if (isUnlocked)
+                Debug.Log("Player masuk area level! Tekan J.");
+            else
+                Debug.Log("Level ini masih terkunci!");
         }
     }
 
@@ -28,12 +66,14 @@ public class LevelTile : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             playerNearby = false;
+            UpdateSprite();
         }
     }
 
     private void Update()
     {
-        if (playerNearby && Input.GetKeyDown(KeyCode.J) && !isLoading)
+        if (playerNearby && isUnlocked &&
+            Input.GetKeyDown(KeyCode.J) && !isLoading)
         {
             if (transition != null)
             {

@@ -949,6 +949,13 @@ public class BossController : MonoBehaviour
     }
     IEnumerator GroundSlam()
     {
+        // Ganti sprite kedua tangan menjadi pose Ground Slam.
+        if (leftHand != null)
+            leftHand.SetGroundSlamSprite(true);
+
+        if (rightHand != null)
+            rightHand.SetGroundSlamSprite(true);
+
         currentState = BossState.SlamTelegraph;
 
         // 1. RAISE: tangan terangkat
@@ -1068,14 +1075,20 @@ public class BossController : MonoBehaviour
         // 6. Kembali ke posisi awal
         if (!isDead)
         {
-            yield return StartCoroutine(
-                MoveHands(
-                    leftHandStartPosition,
-                    rightHandStartPosition,
-                    handReturnDuration
-                )
-            );
+            yield return StartCoroutine(MoveHands(
+                leftHandStartPosition,
+                rightHandStartPosition,
+                handReturnDuration
+            ));
+
             ThrownObjectCollision.instance.canHitBoss = true;
+
+            // Kembalikan sprite kedua tangan.
+            if (leftHand != null)
+                leftHand.SetGroundSlamSprite(false);
+
+            if (rightHand != null)
+                rightHand.SetGroundSlamSprite(false);
         }
     }
 

@@ -1,25 +1,32 @@
+
 using UnityEngine;
 
 public class ResultUI : MonoBehaviour
 {
     public GameObject menang, kalah;
     public static ResultUI Instance;
-    public float waitTime = 2f; // Time to wait before pausing the game
+
+    [Header("Level Progress")]
+    public int completedLevelIndex = 0;
+
+    public float waitTime = 2f;
     bool startWaiting = false;
 
     void Awake()
     {
         Instance = this;
     }
+
     void Update()
     {
         if (startWaiting)
         {
-            waitTime -= Time.deltaTime; // Decrease the wait time
+            waitTime -= Time.deltaTime;
+
             if (waitTime <= 0)
             {
-                Time.timeScale = 0f; // Pause the game
-                startWaiting = false; // Stop waiting after pausing
+                Time.timeScale = 0f;
+                startWaiting = false;
             }
         }
     }
@@ -28,14 +35,18 @@ public class ResultUI : MonoBehaviour
     {
         menang.SetActive(true);
         kalah.SetActive(false);
-        startWaiting = true; // Start waiting
+
+        // Simpan progress dan buka level berikutnya.
+        LevelProgress.CompleteLevel(completedLevelIndex);
+
+        startWaiting = true;
     }
 
     public void KalahUI()
     {
         kalah.SetActive(true);
         menang.SetActive(false);
-        startWaiting = true; // Start waiting
-    }
 
+        startWaiting = true;
+    }
 }
