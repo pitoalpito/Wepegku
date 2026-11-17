@@ -108,6 +108,10 @@ public class BossController : MonoBehaviour
     public float projectileSpeed = 8f;
     public int projectileDamage = 10;
 
+    [Header("Mouth Animation - Phase 2")]
+    public Animator mouthAnimator;
+    public float mouthCloseDuration = 0.35f;
+
     [Header("Ground Slam")]
     public float slamTelegraphTime = 1f;
     public float slamRecoveryTime = 2.5f;
@@ -211,6 +215,9 @@ public class BossController : MonoBehaviour
     {
         Time.timeScale = 1f; // Pastikan waktu berjalan normal saat memulai
         currentHealth = maxHealth;
+
+        // Pastikan mulut berada dalam kondisi tertutup saat boss mulai.
+        SetMouthOpen(false);
 
         if (leftHandRoot != null)
             leftHandStartPosition = leftHandRoot.localPosition;
@@ -741,13 +748,24 @@ public class BossController : MonoBehaviour
 
     IEnumerator ProjectileVolley()
     {
+        bool usingMouth = phase == 2;
+
+        // Phase 2: buka mulut sebelum mulai menembakkan projectile.
+        if (usingMouth)
+            SetMouthOpen(true);
+
         currentState = BossState.VolleyTelegraph;
 
         float telegraphTime = phase == 1 ? 0.6f : 0.3f;
         yield return new WaitForSeconds(telegraphTime);
 
         if (isDead)
+        {
+            if (usingMouth)
+                SetMouthOpen(false);
+
             yield break;
+        }
 
         currentState = BossState.VolleyAttack;
 
@@ -758,7 +776,12 @@ public class BossController : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             if (isDead)
+            {
+                if (usingMouth)
+                    SetMouthOpen(false);
+
                 yield break;
+            }
 
             if (phase == 1)
             {
@@ -775,7 +798,28 @@ public class BossController : MonoBehaviour
 
             yield return new WaitForSeconds(projectileInterval);
         }
+
+        // Setelah semua projectile selesai, tutup mulut dan kembali ke idle.
+        // Waktu tunggu memberi kesempatan animasi menutup selesai
+        // sebelum EyeLaserAttack() dijalankan oleh BossLoop().
+        if (usingMouth)
+        {
+            SetMouthOpen(false);
+
+            if (!isDead && mouthCloseDuration > 0f)
+                yield return new WaitForSeconds(mouthCloseDuration);
+        }
     }
+
+    void SetMouthOpen(bool open)
+    {
+        if (mouthAnimator == null)
+            return;
+
+        mouthAnimator.SetBool("Open", open);
+        mouthAnimator.SetBool("Idle", !open);
+    }
+
 
     void FireMouthProjectile()
     {

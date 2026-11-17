@@ -1,12 +1,18 @@
 
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class PlayerHealth : MonoBehaviour
 {
     [Header("Health")]
     public int maxHealth = 100;
     public int currentHealth;
+
+    [Header("Health UI")]
+    public Slider healthSlider;
+    public TMP_Text healthText;
 
     [Header("Invincibility Frames")]
     public float iframeDuration = 1f;
@@ -29,6 +35,8 @@ public class PlayerHealth : MonoBehaviour
             playerSprites =
                 GetComponentsInChildren<SpriteRenderer>();
         }
+
+        UpdateHealthUI();
     }
 
     public void TakeDamage(int damage)
@@ -37,6 +45,9 @@ public class PlayerHealth : MonoBehaviour
             return;
 
         currentHealth = Mathf.Max(0, currentHealth - damage);
+
+        // Perbarui UI setelah terkena damage.
+        UpdateHealthUI();
 
         Debug.Log(
             "Player terkena damage: " + damage +
@@ -53,6 +64,20 @@ public class PlayerHealth : MonoBehaviour
             StopCoroutine(iframeCoroutine);
 
         iframeCoroutine = StartCoroutine(IFrameRoutine());
+    }
+
+    void UpdateHealthUI()
+    {
+        if (healthSlider != null)
+        {
+            healthSlider.maxValue = maxHealth;
+            healthSlider.value = currentHealth;
+        }
+
+        if (healthText != null)
+        {
+            healthText.text = currentHealth + " / " + maxHealth;
+        }
     }
 
     IEnumerator IFrameRoutine()
@@ -89,8 +114,11 @@ public class PlayerHealth : MonoBehaviour
     void Die()
     {
         IsDead = true;
+
         Debug.Log("Player defeated!");
+
         ResultUI.Instance.KalahUI();
+
         // Nanti bisa disambungkan ke animasi mati
         // atau sistem Game Over.
     }
