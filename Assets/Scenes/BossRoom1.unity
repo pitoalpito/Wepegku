@@ -1283,6 +1283,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1158601492823547897, guid: c10a76e99477c004280b8179ebb32bdd, type: 3}
+      propertyPath: characterVisual
+      value: 
+      objectReference: {fileID: 1757494780}
     - target: {fileID: 2011212744292745976, guid: c10a76e99477c004280b8179ebb32bdd, type: 3}
       propertyPath: m_FlipX
       value: 1

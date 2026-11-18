@@ -36,15 +36,25 @@ public class PlayerMovement : MonoBehaviour
 
     public float MoveInput => moveInput;
     private DashController dashController;
+    [Header("Flip Settings")]
+    public Transform characterVisual;
+    private Vector3 originalScale;
 
     void Start()
     {
+        if (characterVisual != null)
+        {
+            originalScale = characterVisual.localScale;
+        }
+
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = gravityScale;
 
         jumpsRemaining = maxJumps;
 
         dashController = GetComponent<DashController>();
+
+
     }
 
     void Update()
@@ -100,6 +110,26 @@ public class PlayerMovement : MonoBehaviour
             );
 
             isJumping = false;
+        }
+        // Flip visual berdasarkan arah gerakan
+        if (characterVisual != null)
+        {
+            if (moveInput > 0)
+            {
+                characterVisual.localScale = new Vector3(
+                    Mathf.Abs(originalScale.x),
+                    originalScale.y,
+                    originalScale.z
+                );
+            }
+            else if (moveInput < 0)
+            {
+                characterVisual.localScale = new Vector3(
+                    -Mathf.Abs(originalScale.x),
+                    originalScale.y,
+                    originalScale.z
+                );
+            }
         }
     }
 
