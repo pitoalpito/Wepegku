@@ -13,16 +13,11 @@ public class CameraFollow : MonoBehaviour
     [Range(0.1f, 0.5f)]
     public float playerScreenHeight = 0.3f;
 
-    [Header("Zoom Settings")]
-    public float defaultZoom = 5f;
-    public float zoomSpeed = 3f;
-
     [Header("Screen Shake")]
     public float shakeIntensity = 0.15f;
     public float shakeDuration = 0.1f;
 
     private Camera cam;
-    private float targetZoom;
     private Vector3 cameraVelocity;
 
     // Posisi kamera tanpa efek shake
@@ -35,36 +30,20 @@ public class CameraFollow : MonoBehaviour
     void Awake()
     {
         cam = GetComponent<Camera>();
-        targetZoom = defaultZoom;
-
-        if (cam != null)
-        {
-            cam.orthographicSize = defaultZoom;
-        }
-
         followPosition = transform.position;
     }
 
     void LateUpdate()
     {
-        if(player == null || cam == null)
-    {
+        if (player == null || cam == null)
+        {
             Debug.LogWarning(
                 "CameraFollow: Player atau Camera belum terisi!"
             );
             return;
         }
 
-        // Debug.Log("Player Position: " + player.position);
-
-        // Smooth zoom
-        cam.orthographicSize = Mathf.Lerp(
-            cam.orthographicSize,
-            targetZoom,
-            zoomSpeed * Time.deltaTime
-        );
-
-        // Hitung posisi target berdasarkan zoom
+        // Hitung posisi target berdasarkan ukuran kamera saat ini
         float cameraHeight = cam.orthographicSize * 2f;
 
         float verticalOffset =
@@ -118,15 +97,5 @@ public class CameraFollow : MonoBehaviour
         currentShakeIntensity = intensity;
         shakeDuration = duration;
         shakeTimer = duration;
-    }
-
-    public void SetZoom(float newZoom)
-    {
-        targetZoom = newZoom;
-    }
-
-    public void ResetZoom()
-    {
-        targetZoom = defaultZoom;
     }
 }

@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
 public class BossController : MonoBehaviour
 {
@@ -115,7 +116,14 @@ public class BossController : MonoBehaviour
     [Header("Ground Slam")]
     public float slamTelegraphTime = 1f;
     public float slamRecoveryTime = 2.5f;
+
+    [Header("Ground Slam Damage")]
     public int slamDamage = 20;
+    public float slamImpactRadius = 1.5f;
+
+    public int shockwaveDamage = 10;
+    public float shockwaveMaxRadius = 5f;
+    public float shockwaveDuration = 0.4f;
 
     [Header("Ground Slam Animation")]
     public Transform leftHandRoot;
@@ -1031,6 +1039,88 @@ public class BossController : MonoBehaviour
         }
     }
 
+    void ApplyGroundSlamImpact(Vector2 impactPosition)
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(
+            impactPosition,
+            slamImpactRadius
+        );
+
+        HashSet<PlayerHealth> damagedPlayers = new HashSet<PlayerHealth>();
+
+        foreach (Collider2D hit in hits)
+        {
+            PlayerHealth health =
+                hit.GetComponentInParent<PlayerHealth>();
+
+            if (health == null || damagedPlayers.Contains(health))
+                continue;
+
+            damagedPlayers.Add(health);
+            health.TakeDamage(slamDamage);
+
+            Debug.Log("GROUND SLAM IMPACT! Damage: " + slamDamage);
+        }
+    }
+
+    IEnumerator GroundSlamShockwave(Vector2 impactPosition)
+    {
+        float timer = 0f;
+        float previousRadius = slamImpactRadius;
+
+        HashSet<PlayerHealth> damagedPlayers = new HashSet<PlayerHealth>();
+
+        while (timer < shockwaveDuration)
+        {
+            timer += Time.deltaTime;
+
+            float progress = Mathf.Clamp01(
+                timer / shockwaveDuration
+            );
+
+            float currentRadius = Mathf.Lerp(
+                slamImpactRadius,
+                shockwaveMaxRadius,
+                progress
+            );
+
+            Collider2D[] hits = Physics2D.OverlapCircleAll(
+                impactPosition,
+                currentRadius
+            );
+
+            foreach (Collider2D hit in hits)
+            {
+                PlayerHealth health =
+                    hit.GetComponentInParent<PlayerHealth>();
+
+                if (health == null || damagedPlayers.Contains(health))
+                    continue;
+
+                float distance = Vector2.Distance(
+                    impactPosition,
+                    health.transform.position
+                );
+
+                // Hanya damage player yang berada di jalur shockwave.
+                if (distance > previousRadius &&
+                    distance <= currentRadius)
+                {
+                    damagedPlayers.Add(health);
+                    health.TakeDamage(shockwaveDamage);
+
+                    Debug.Log(
+                        "SHOCKWAVE HIT! Damage: " + shockwaveDamage
+                    );
+                }
+            }
+
+            previousRadius = currentRadius;
+
+            yield return null;
+        }
+    }
+
     IEnumerator GroundSlam()
     {
         // Kunci posisi player saat Ground Slam dimulai.
@@ -1149,6 +1239,14 @@ public class BossController : MonoBehaviour
                 yield break;
 
             SpawnVFX(groundSlamVFXPrefab, leftHandRoot.position);
+
+            // Impact damage
+            ApplyGroundSlamImpact(leftHandRoot.position);
+
+            // Shockwave damage
+            StartCoroutine(
+                GroundSlamShockwave(leftHandRoot.position)
+            );
         }
 
         // 4. RIGHT HAND SLAM.
@@ -1170,6 +1268,14 @@ public class BossController : MonoBehaviour
                 yield break;
 
             SpawnVFX(groundSlamVFXPrefab, rightHandRoot.position);
+
+            // Impact damage
+            ApplyGroundSlamImpact(rightHandRoot.position);
+
+            // Shockwave damage
+            StartCoroutine(
+                GroundSlamShockwave(rightHandRoot.position)
+            );
         }
 
         if (isDead)
@@ -1834,4 +1940,4 @@ public class BossController : MonoBehaviour
 
         vfx.Play();
     }
-}
+}   
