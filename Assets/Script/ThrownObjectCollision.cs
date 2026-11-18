@@ -98,6 +98,7 @@ public class ThrownObjectCollision : MonoBehaviour
 
             // Berikan damage ke tangan boss.
             bossHand.TakeDamage(damage);
+            AudioManager.Instance.PlaySFX("Rock");
 
             Debug.Log(
                 "Batu mengenai tangan boss! Damage: " + damage,

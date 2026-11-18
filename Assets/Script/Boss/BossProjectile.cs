@@ -77,6 +77,8 @@ public class BossProjectile : MonoBehaviour
 
         projectileVFX.transform.localRotation =
             Quaternion.Euler(0f, 0f, angle);
+        
+        AudioManager.Instance.PlaySFX("Projectile");
     }
 
     void SpawnTrailVFX()
