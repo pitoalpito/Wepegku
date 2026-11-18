@@ -13,6 +13,9 @@ public class LevelTile : MonoBehaviour
     public Sprite selectedSprite;
     public Sprite lockedSprite;
 
+    [Header("Level Text")]
+    public GameObject levelText;
+
     private bool playerNearby;
     private CircleTransition transition;
     private bool isLoading;
@@ -27,6 +30,9 @@ public class LevelTile : MonoBehaviour
 
         CheckUnlock();
         UpdateSprite();
+
+        if (levelText != null)
+            levelText.SetActive(false);
     }
 
     private void CheckUnlock()
@@ -45,6 +51,10 @@ public class LevelTile : MonoBehaviour
             spriteRenderer.sprite = selectedSprite;
         else
             spriteRenderer.sprite = defaultSprite;
+
+        // Tampilkan tulisan hanya jika level terbuka dan diinjak.
+        if (levelText != null)
+            levelText.SetActive(playerNearby && isUnlocked);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
