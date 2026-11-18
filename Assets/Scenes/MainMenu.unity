@@ -649,23 +649,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
   bgmList:
   - id: Menu
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: e7063a483ffd0204f943b0215361b3a7, type: 3}
     volume: 1
   - id: Level1
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: ff6937c66ae2120429cbad34a8f10330, type: 3}
     volume: 1
   sfxList:
   - id: ButtonClick
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: eac83933dffbfa24baff4c82327f85b5, type: 3}
     volume: 1
   - id: Transisi
     clip: {fileID: 0}
     volume: 1
   - id: BasicAttack
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 478fea90276e06c43a01257e862b2843, type: 3}
     volume: 1
   - id: Projectile
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: a5208e25cbab5e744bdc06e9edd1fe80, type: 3}
     volume: 1
   - id: LaserCharge
     clip: {fileID: 0}
