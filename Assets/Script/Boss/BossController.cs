@@ -136,6 +136,8 @@ public class BossController : MonoBehaviour
 
     private Vector3 leftHandStartPosition;
     private Vector3 rightHandStartPosition;
+    private Transform leftHandHomeParent;
+    private Transform rightHandHomeParent;
 
     [Header("Rock Counter")]
     public int rockDamage = 40;
@@ -204,6 +206,18 @@ public class BossController : MonoBehaviour
     {
         Debug.Log(hand.name + " telah dikalahkan!");
 
+        // Jika tangan kiri kalah saat terlepas dari parent.
+        if (hand == leftHand && leftHandRoot != null)
+        {
+            leftHandRoot.SetParent(leftHandHomeParent, true);
+        }
+
+        // Jika tangan kanan kalah saat terlepas dari parent.
+        if (hand == rightHand && rightHandRoot != null)
+        {
+            rightHandRoot.SetParent(rightHandHomeParent, true);
+        }
+
         if (leftHand != null && rightHand != null &&
             leftHand.IsDefeated && rightHand.IsDefeated)
         {
@@ -220,10 +234,16 @@ public class BossController : MonoBehaviour
         SetMouthOpen(false);
 
         if (leftHandRoot != null)
+        {
             leftHandStartPosition = leftHandRoot.localPosition;
+            leftHandHomeParent = leftHandRoot.parent;
+        }
 
         if (rightHandRoot != null)
+        {
             rightHandStartPosition = rightHandRoot.localPosition;
+            rightHandHomeParent = rightHandRoot.parent;
+        }
 
         if (headRoot != null)
             headStartPosition = headRoot.localPosition;
@@ -267,24 +287,6 @@ public class BossController : MonoBehaviour
         bossRoutine = StartCoroutine(BossIntroSequence());
     }
 
-    void SetHandTrigger(bool isTrigger)
-    {
-        if (leftHandRoot != null)
-        {
-            Collider2D col = leftHandRoot.GetComponent<Collider2D>();
-
-            if (col != null)
-                col.isTrigger = isTrigger;
-        }
-
-        if (rightHandRoot != null)
-        {
-            Collider2D col = rightHandRoot.GetComponent<Collider2D>();
-
-            if (col != null)
-                col.isTrigger = isTrigger;
-        }
-    }
 
     void SetupLaserLine(LineRenderer line)
     {
@@ -1010,7 +1012,24 @@ public class BossController : MonoBehaviour
         return handRoot.position;
     }
 
+    void SetHandTrigger(bool isTrigger)
+    {
+        if (leftHandRoot != null)
+        {
+            Collider2D col = leftHandRoot.GetComponent<Collider2D>();
 
+            if (col != null)
+                col.isTrigger = isTrigger;
+        }
+
+        if (rightHandRoot != null)
+        {
+            Collider2D col = rightHandRoot.GetComponent<Collider2D>();
+
+            if (col != null)
+                col.isTrigger = isTrigger;
+        }
+    }
 
     IEnumerator GroundSlam()
     {
@@ -1098,6 +1117,7 @@ public class BossController : MonoBehaviour
             yield break;
 
         currentState = BossState.SlamAttack;
+        SetHandTrigger(false);
 
         // Hitung target kedua tangan berdasarkan posisi player yang dikunci.
         Vector3 leftSlamTarget = GetGroundSlamTarget(
@@ -1227,6 +1247,7 @@ public class BossController : MonoBehaviour
             );
         }
 
+        SetHandTrigger(true);
         // Izinkan kembali objek yang dilempar mengenai boss.
         if (ThrownObjectCollision.instance != null)
             ThrownObjectCollision.instance.canHitBoss = true;

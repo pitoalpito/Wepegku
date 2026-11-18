@@ -335,7 +335,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 6.72
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -2413,7 +2413,7 @@ MonoBehaviour:
     m_Bits: 0
   telegraphWidth: 0.06
   firingWidth: 0.18
-  laserColor: {r: 1, g: 0.7702571, b: 0, a: 1}
+  laserColor: {r: 1, g: 0, b: 0, a: 1}
   leftWindupPrefab: {fileID: 367346971285565992, guid: 835046e7c752d644ba37063eb8a16bbc, type: 3}
   rightWindupPrefab: {fileID: 367346971285565992, guid: 835046e7c752d644ba37063eb8a16bbc, type: 3}
   leftLaserVFXPrefab: {fileID: 367346971285565992, guid: 835046e7c752d644ba37063eb8a16bbc, type: 3}
@@ -2452,7 +2452,7 @@ MonoBehaviour:
   handRaiseDuration: 0.3
   handSlamDuration: 0.12
   handReturnDuration: 0.35
-  rockDamage: 40
+  rockDamage: 100
   headRoot: {fileID: 806268010}
   headCollider: {fileID: 806268012}
   headRaiseHeight: 0.8
