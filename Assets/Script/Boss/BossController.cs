@@ -267,6 +267,25 @@ public class BossController : MonoBehaviour
         bossRoutine = StartCoroutine(BossIntroSequence());
     }
 
+    void SetHandTrigger(bool isTrigger)
+    {
+        if (leftHandRoot != null)
+        {
+            Collider2D col = leftHandRoot.GetComponent<Collider2D>();
+
+            if (col != null)
+                col.isTrigger = isTrigger;
+        }
+
+        if (rightHandRoot != null)
+        {
+            Collider2D col = rightHandRoot.GetComponent<Collider2D>();
+
+            if (col != null)
+                col.isTrigger = isTrigger;
+        }
+    }
+
     void SetupLaserLine(LineRenderer line)
     {
         if (line == null)
@@ -280,6 +299,7 @@ public class BossController : MonoBehaviour
         line.endColor = laserColor;
         line.enabled = false;
     }
+
 
 
     IEnumerator BossLoop()
@@ -898,19 +918,27 @@ public class BossController : MonoBehaviour
     // GROUND SLAM
     // =========================================
 
-    Vector3 GetGroundSlamTarget(Transform handRoot)
+
+
+    Vector3 GetGroundSlamTarget(
+        Transform handRoot,
+        Vector3 lockedPlayerPosition)
     {
         if (handRoot == null)
             return Vector3.zero;
 
-        // Mencari collider ke arah bawah.
+        // Percobaan pertama: cari Ground di bawah posisi X player.
+        Vector2 playerSideOrigin = new Vector2(
+            lockedPlayerPosition.x,
+            handRoot.position.y
+        );
+
         RaycastHit2D[] hits = Physics2D.RaycastAll(
-            handRoot.position,
+            playerSideOrigin,
             Vector2.down,
             slamRaycastDistance
         );
 
-        // Mengurutkan collider berdasarkan jarak.
         System.Array.Sort(
             hits,
             (a, b) => a.distance.CompareTo(b.distance)
@@ -921,35 +949,99 @@ public class BossController : MonoBehaviour
             if (hit.collider == null)
                 continue;
 
-            // Memeriksa Tag Ground.
+            // Abaikan collider boss sendiri.
+            if (hit.collider.transform == transform ||
+                hit.collider.transform.IsChildOf(transform))
+                continue;
+
             if (hit.collider.CompareTag("Ground"))
             {
-                Vector3 groundPosition = new Vector3(
+                Debug.Log("Ground ditemukan di arah player: " + handRoot.name);
+
+                return new Vector3(
+                    hit.point.x,
+                    hit.point.y + slamGroundOffset,
+                    handRoot.position.z
+                );
+            }
+        }
+
+        // Percobaan kedua: jika tidak ada Ground di bawah player,
+        // cari Ground tepat di bawah tangan.
+        Vector2 handOrigin = handRoot.position;
+
+        hits = Physics2D.RaycastAll(
+            handOrigin,
+            Vector2.down,
+            slamRaycastDistance
+        );
+
+        System.Array.Sort(
+            hits,
+            (a, b) => a.distance.CompareTo(b.distance)
+        );
+
+        foreach (RaycastHit2D hit in hits)
+        {
+            if (hit.collider == null)
+                continue;
+
+            if (hit.collider.transform == transform ||
+                hit.collider.transform.IsChildOf(transform))
+                continue;
+
+            if (hit.collider.CompareTag("Ground"))
+            {
+                Debug.Log("Ground fallback ditemukan: " + handRoot.name);
+
+                return new Vector3(
                     handRoot.position.x,
                     hit.point.y + slamGroundOffset,
                     handRoot.position.z
                 );
-
-                if (handRoot.parent != null)
-                {
-                    return handRoot.parent.InverseTransformPoint(
-                        groundPosition
-                    );
-                }
-
-                return groundPosition;
             }
         }
 
         Debug.LogWarning(
-            "Ground tidak ditemukan di bawah " + handRoot.name
+            "Ground tidak ditemukan oleh " + handRoot.name +
+            ". Periksa Tag Ground dan Collider2D."
         );
 
-        return handRoot.localPosition;
+        return handRoot.position;
     }
+
+
+
     IEnumerator GroundSlam()
     {
-        // Ganti sprite kedua tangan menjadi pose Ground Slam.
+        // Kunci posisi player saat Ground Slam dimulai.
+        Vector3 lockedPlayerPosition = player != null
+            ? player.position
+            : transform.position;
+
+        // Simpan parent dan transform awal kedua tangan.
+        Transform leftOriginalParent =
+            leftHandRoot != null ? leftHandRoot.parent : null;
+
+        Transform rightOriginalParent =
+            rightHandRoot != null ? rightHandRoot.parent : null;
+
+        Vector3 leftOriginalLocalPosition = leftHandStartPosition;
+        Vector3 rightOriginalLocalPosition = rightHandStartPosition;
+
+        Quaternion leftOriginalLocalRotation =
+            leftHandRoot != null ? leftHandRoot.localRotation : Quaternion.identity;
+
+        Quaternion rightOriginalLocalRotation =
+            rightHandRoot != null ? rightHandRoot.localRotation : Quaternion.identity;
+
+        Vector3 leftOriginalLocalScale =
+            leftHandRoot != null ? leftHandRoot.localScale : Vector3.one;
+
+        Vector3 rightOriginalLocalScale =
+            rightHandRoot != null ? rightHandRoot.localScale : Vector3.one;
+
+        // Ganti sprite Ground Slam.
         if (leftHand != null)
             leftHand.SetGroundSlamSprite(true);
 
@@ -958,7 +1050,7 @@ public class BossController : MonoBehaviour
 
         currentState = BossState.SlamTelegraph;
 
-        // 1. RAISE: tangan terangkat
+        // 1. RAISE: kedua tangan terangkat.
         yield return StartCoroutine(
             MoveHands(
                 leftHandStartPosition + Vector3.up * handRaiseHeight,
@@ -967,9 +1059,10 @@ public class BossController : MonoBehaviour
             )
         );
 
-        //SFX bisa ditaruh disini
+        if (isDead)
+            yield break;
 
-        // 2. SHAKE: tangan bergetar sebelum menyerang
+        // 2. SHAKE: kedua tangan bergetar.
         float shakeTimer = 0f;
 
         while (shakeTimer < handShakeDuration && !isDead)
@@ -1004,37 +1097,67 @@ public class BossController : MonoBehaviour
         if (isDead)
             yield break;
 
-        // 3. SLAM: tangan turun sampai menyentuh tanah
         currentState = BossState.SlamAttack;
 
-        Vector3 leftSlamTarget =
-            GetGroundSlamTarget(leftHandRoot);
-
-        Vector3 rightSlamTarget =
-            GetGroundSlamTarget(rightHandRoot);
-
-        yield return StartCoroutine(
-            MoveHands(
-                leftSlamTarget,
-                rightSlamTarget,
-                handSlamDuration
-            )
+        // Hitung target kedua tangan berdasarkan posisi player yang dikunci.
+        Vector3 leftSlamTarget = GetGroundSlamTarget(
+            leftHandRoot,
+            lockedPlayerPosition
         );
+
+        Vector3 rightSlamTarget = GetGroundSlamTarget(
+            rightHandRoot,
+            lockedPlayerPosition
+        );
+
+        // 3. LEFT HAND SLAM.
+        if (leftHandRoot != null &&
+            leftHand != null && !leftHand.IsDefeated)
+        {
+            // Lepaskan tangan kiri dari parent.
+            leftHandRoot.SetParent(null, true);
+
+            yield return StartCoroutine(
+                MoveHandWorld(
+                    leftHandRoot,
+                    leftSlamTarget,
+                    handSlamDuration
+                )
+            );
+
+            if (isDead)
+                yield break;
+
+            SpawnVFX(groundSlamVFXPrefab, leftHandRoot.position);
+        }
+
+        // 4. RIGHT HAND SLAM.
+        if (rightHandRoot != null &&
+            rightHand != null && !rightHand.IsDefeated)
+        {
+            // Lepaskan tangan kanan dari parent.
+            rightHandRoot.SetParent(null, true);
+
+            yield return StartCoroutine(
+                MoveHandWorld(
+                    rightHandRoot,
+                    rightSlamTarget,
+                    handSlamDuration
+                )
+            );
+
+            if (isDead)
+                yield break;
+
+            SpawnVFX(groundSlamVFXPrefab, rightHandRoot.position);
+        }
 
         if (isDead)
             yield break;
 
-        // 4. IMPACT: batu muncul saat tangan mencapai bawah
+        // 5. IMPACT setelah kedua tangan menghantam.
         SpawnFallingRocks();
 
-        // LOKASI SPAWN VFX: posisi masing-masing tangan saat menghantam tanah.
-        if (leftHandRoot != null)
-            SpawnVFX(groundSlamVFXPrefab, leftHandRoot.position);
-
-        if (rightHandRoot != null)
-            SpawnVFX(groundSlamVFXPrefab, rightHandRoot.position);
-
-        // Camera shake saat kedua tangan menghantam tanah.
         if (cameraFollow != null)
         {
             cameraFollow.TriggerShake(
@@ -1042,8 +1165,6 @@ public class BossController : MonoBehaviour
                 groundSlamShakeDuration
             );
         }
-
-        //SFX bisa ditaruh disini
 
         recoveryInterrupted = false;
 
@@ -1053,7 +1174,7 @@ public class BossController : MonoBehaviour
         if (rightHand != null && !rightHand.IsDefeated)
             rightHand.SetSlamRecovery(true);
 
-        // 5. RECOVERY: tangan berada di bawah
+        // 6. RECOVERY: tangan tetap menancap di posisi masing-masing.
         currentState = BossState.SlamRecovery;
 
         float timer = 0f;
@@ -1072,24 +1193,49 @@ public class BossController : MonoBehaviour
         if (rightHand != null)
             rightHand.SetSlamRecovery(false);
 
-        // 6. Kembali ke posisi awal
-        if (!isDead)
-        {
-            yield return StartCoroutine(MoveHands(
-                leftHandStartPosition,
-                rightHandStartPosition,
-                handReturnDuration
-            ));
+        if (isDead)
+            yield break;
 
+        // 7. RETURN: tangan kembali ke posisi awal.
+        if (leftHandRoot != null &&
+            leftHand != null && !leftHand.IsDefeated)
+        {
+            yield return StartCoroutine(
+                ReturnHandToParent(
+                    leftHandRoot,
+                    leftOriginalParent,
+                    leftOriginalLocalPosition,
+                    leftOriginalLocalRotation,
+                    leftOriginalLocalScale,
+                    handReturnDuration
+                )
+            );
+        }
+
+        if (rightHandRoot != null &&
+            rightHand != null && !rightHand.IsDefeated)
+        {
+            yield return StartCoroutine(
+                ReturnHandToParent(
+                    rightHandRoot,
+                    rightOriginalParent,
+                    rightOriginalLocalPosition,
+                    rightOriginalLocalRotation,
+                    rightOriginalLocalScale,
+                    handReturnDuration
+                )
+            );
+        }
+
+        // Izinkan kembali objek yang dilempar mengenai boss.
+        if (ThrownObjectCollision.instance != null)
             ThrownObjectCollision.instance.canHitBoss = true;
 
-            // Kembalikan sprite kedua tangan.
-            if (leftHand != null)
-                leftHand.SetGroundSlamSprite(false);
+        if (leftHand != null)
+            leftHand.SetGroundSlamSprite(false);
 
-            if (rightHand != null)
-                rightHand.SetGroundSlamSprite(false);
-        }
+        if (rightHand != null)
+            rightHand.SetGroundSlamSprite(false);
     }
 
     IEnumerator MoveHands(
@@ -1146,8 +1292,73 @@ public class BossController : MonoBehaviour
     }
 
 
+    IEnumerator MoveHandWorld(
+        Transform handRoot,
+        Vector3 target,
+        float duration)
+    {
+        if (handRoot == null)
+            yield break;
 
-    
+        Vector3 startPosition = handRoot.position;
+        float timer = 0f;
+
+        while (timer < duration && !isDead)
+        {
+            float t = duration > 0f
+                ? Mathf.Clamp01(timer / duration)
+                : 1f;
+
+            t = Mathf.SmoothStep(0f, 1f, t);
+
+            handRoot.position = Vector3.Lerp(
+                startPosition,
+                target,
+                t
+            );
+
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        if (!isDead)
+            handRoot.position = target;
+    }
+
+
+    IEnumerator ReturnHandToParent(
+        Transform handRoot,
+        Transform originalParent,
+        Vector3 originalLocalPosition,
+        Quaternion originalLocalRotation,
+        Vector3 originalLocalScale,
+        float duration)
+    {
+        if (handRoot == null)
+            yield break;
+
+        // Cari posisi awal berdasarkan parent yang tersimpan.
+        Vector3 returnPosition = originalParent != null
+            ? originalParent.TransformPoint(originalLocalPosition)
+            : originalLocalPosition;
+
+        yield return StartCoroutine(
+            MoveHandWorld(handRoot, returnPosition, duration)
+        );
+
+        if (isDead)
+            yield break;
+
+        // Pasang kembali parent.
+        handRoot.SetParent(originalParent, true);
+
+        handRoot.localPosition = originalLocalPosition;
+        handRoot.localRotation = originalLocalRotation;
+        handRoot.localScale = originalLocalScale;
+    }
+
+
+
     IEnumerator HeadSlam()
     {
         if (headRoot == null)
