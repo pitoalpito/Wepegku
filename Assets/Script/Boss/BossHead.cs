@@ -9,6 +9,9 @@ public class BossHead : MonoBehaviour
     public SpriteRenderer spriteRenderer;
     public Collider2D headCollider;
 
+    [Header("Hit Sprites")]
+    public Sprite hitSprite;
+
     [Header("Hit Reaction")]
     public Color hitColor = Color.white;
     public float flashDuration = 0.08f;
@@ -20,6 +23,8 @@ public class BossHead : MonoBehaviour
     public int slamDamage = 20;
 
     private Color originalColor;
+    private Sprite originalSprite;
+
     private Coroutine hitRoutine;
     private bool hasHitPlayer;
 
@@ -32,7 +37,10 @@ public class BossHead : MonoBehaviour
             headCollider = GetComponent<Collider2D>();
 
         if (spriteRenderer != null)
+        {
             originalColor = spriteRenderer.color;
+            originalSprite = spriteRenderer.sprite;
+        }
     }
 
     // =========================================
@@ -96,7 +104,12 @@ public class BossHead : MonoBehaviour
     IEnumerator HitReactionRoutine()
     {
         if (spriteRenderer != null)
+        {
+            if (hitSprite != null)
+                spriteRenderer.sprite = hitSprite;
+
             spriteRenderer.color = hitColor;
+        }
 
         float direction = 1f;
 
@@ -174,8 +187,12 @@ public class BossHead : MonoBehaviour
             yield return null;
         }
 
+        // 5. Mengembalikan sprite dan warna asli
         if (spriteRenderer != null)
+        {
+            spriteRenderer.sprite = originalSprite;
             spriteRenderer.color = originalColor;
+        }
 
         hitRoutine = null;
     }

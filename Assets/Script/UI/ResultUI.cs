@@ -35,6 +35,7 @@ public class ResultUI : MonoBehaviour
     {
         menang.SetActive(true);
         kalah.SetActive(false);
+        AudioManager.Instance.PlaySFX("Win");
 
         // Simpan progress dan buka level berikutnya.
         LevelProgress.CompleteLevel(completedLevelIndex);
@@ -46,6 +47,7 @@ public class ResultUI : MonoBehaviour
     {
         kalah.SetActive(true);
         menang.SetActive(false);
+        AudioManager.Instance.PlaySFX("Lose");
 
         startWaiting = true;
     }

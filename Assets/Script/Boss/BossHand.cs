@@ -1,3 +1,4 @@
+
 using System.Collections;
 using UnityEngine;
 
@@ -16,6 +17,10 @@ public class BossHand : MonoBehaviour
     public Sprite defaultSprite;
     public Sprite groundSlamSprite;
 
+    [Header("White Hit Sprites")]
+    public Sprite defaultHitSprite;
+    public Sprite groundSlamHitSprite;
+
     [Header("Hit Reaction")]
     public Color hitColor = Color.white;
     public float flashDuration = 0.08f;
@@ -33,9 +38,17 @@ public class BossHand : MonoBehaviour
     public bool IsSlamRecovery { get; private set; }
     public bool IsDefeated { get; private set; }
 
+    [Header("Defeat VFX")]
+    public GameObject defeatVFXPrefab;
+    public Transform defeatVFXSpawnPoint;
+    public Vector3 defeatVFXOffset;
+
     private Color originalColor;
     private Vector3 originalLocalPosition;
     private Vector3 originalHandRootPosition;
+
+    private Sprite currentBaseSprite;
+    private bool isGroundSlamSprite;
 
     private Coroutine hitRoutine;
     private Coroutine recoilRoutine;
@@ -55,7 +68,15 @@ public class BossHand : MonoBehaviour
             handRoot = transform.parent;
 
         if (spriteRenderer != null)
+        {
             originalColor = spriteRenderer.color;
+
+            currentBaseSprite = defaultSprite != null
+                ? defaultSprite
+                : spriteRenderer.sprite;
+
+            spriteRenderer.sprite = currentBaseSprite;
+        }
 
         // Posisi awal sprite child.
         originalLocalPosition = transform.localPosition;
@@ -65,14 +86,24 @@ public class BossHand : MonoBehaviour
             originalHandRootPosition = handRoot.localPosition;
     }
 
+    // =========================================
+    // HAND SPRITE
+    // =========================================
+
     public void SetGroundSlamSprite(bool active)
     {
         if (spriteRenderer == null)
             return;
 
-        spriteRenderer.sprite = active
+        isGroundSlamSprite = active;
+
+        currentBaseSprite = active
             ? groundSlamSprite
             : defaultSprite;
+
+        // Jangan mengganti white hit sprite ketika sedang terkena damage.
+        if (hitRoutine == null && currentBaseSprite != null)
+            spriteRenderer.sprite = currentBaseSprite;
     }
 
     // =========================================
@@ -156,6 +187,29 @@ public class BossHand : MonoBehaviour
     }
 
     // =========================================
+    // DEFEAT VFX
+    // =========================================
+
+    private void SpawnDefeatVFX()
+    {
+        if (defeatVFXPrefab == null)
+            return;
+
+        Vector3 spawnPosition = defeatVFXSpawnPoint != null
+            ? defeatVFXSpawnPoint.position
+            : transform.position;
+
+        // lokasi spawn vfx
+        spawnPosition += defeatVFXOffset;
+
+        Instantiate(
+            defeatVFXPrefab,
+            spawnPosition,
+            Quaternion.identity
+        );
+    }
+
+    // =========================================
     // DAMAGE
     // =========================================
 
@@ -185,8 +239,10 @@ public class BossHand : MonoBehaviour
 
             if (handCollider != null)
                 handCollider.enabled = false;
-            
-            //kasih efek animasi defeat disini
+
+            SpawnDefeatVFX();
+
+            // Kasih efek animasi defeat di sini.
             // gameObject.SetActive(false);
 
             Debug.Log(name + " berhasil dikalahkan!");
@@ -198,8 +254,18 @@ public class BossHand : MonoBehaviour
 
     IEnumerator HitReactionRoutine()
     {
+        // 1. Ganti sprite menjadi white hit sprite.
         if (spriteRenderer != null)
+        {
+            Sprite whiteSprite = isGroundSlamSprite
+                ? groundSlamHitSprite
+                : defaultHitSprite;
+
+            if (whiteSprite != null)
+                spriteRenderer.sprite = whiteSprite;
+
             spriteRenderer.color = hitColor;
+        }
 
         float direction = 1f;
 
@@ -214,7 +280,7 @@ public class BossHand : MonoBehaviour
         Vector3 targetPosition = startPosition +
             new Vector3(direction * knockbackDistance, 0f, 0f);
 
-        // 1. Knockback
+        // 2. Knockback
         float elapsed = 0f;
 
         while (elapsed < knockbackDuration)
@@ -233,10 +299,10 @@ public class BossHand : MonoBehaviour
 
         transform.localPosition = targetPosition;
 
-        // 2. Menunggu flash sebentar
+        // 3. Menunggu flash sebentar.
         yield return new WaitForSeconds(flashDuration);
 
-        // 3. Mengembalikan posisi tangan
+        // 4. Mengembalikan posisi tangan.
         elapsed = 0f;
 
         while (elapsed < knockbackDuration)
@@ -256,7 +322,7 @@ public class BossHand : MonoBehaviour
 
         transform.localPosition = originalLocalPosition;
 
-        // 4. Smooth fade dari putih ke warna asli
+        // 5. Smooth fade dari putih ke warna asli.
         elapsed = 0f;
 
         while (elapsed < fadeOutDuration)
@@ -277,8 +343,14 @@ public class BossHand : MonoBehaviour
             yield return null;
         }
 
+        // 6. Kembalikan warna dan sprite asli.
         if (spriteRenderer != null)
+        {
             spriteRenderer.color = originalColor;
+
+            if (currentBaseSprite != null)
+                spriteRenderer.sprite = currentBaseSprite;
+        }
 
         hitRoutine = null;
     }

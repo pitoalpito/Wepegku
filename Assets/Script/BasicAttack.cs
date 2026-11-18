@@ -12,6 +12,12 @@ public class BasicAttack : MonoBehaviour
     public int attackDamage = 10;
     public float attackCooldown = 0.3f;
 
+    [Header("Character Sprites")]
+    public SpriteRenderer characterSpriteRenderer;
+    public Sprite normalSprite;
+    public Sprite attackSprite;
+    public Sprite uppercutSprite;
+
     [Header("Hitbox Settings")]
     public Transform attackHitbox;
     public BoxCollider2D attackCollider;
@@ -102,6 +108,9 @@ public class BasicAttack : MonoBehaviour
             hitboxRenderer.enabled = false;
         }
 
+        // Atur sprite awal karakter.
+        SetCharacterSprite(EnemyHitReaction.AttackType.Basic, false);
+
         UpdateHitboxPosition();
     }
 
@@ -126,6 +135,48 @@ public class BasicAttack : MonoBehaviour
         UpdateHitboxPosition();
     }
 
+    // =========================================
+    // CHARACTER SPRITE
+    // =========================================
+
+    void SetCharacterSprite(
+        EnemyHitReaction.AttackType attackType,
+        bool isAttacking)
+    {
+        if (characterSpriteRenderer == null)
+            return;
+
+        // Jika tidak sedang menyerang, gunakan sprite normal.
+        if (!isAttacking)
+        {
+            if (normalSprite != null)
+                characterSpriteRenderer.sprite = normalSprite;
+
+            return;
+        }
+
+        // Jika sedang melakukan Basic Attack.
+        if (attackType == EnemyHitReaction.AttackType.Basic)
+        {
+            if (attackSprite != null)
+                characterSpriteRenderer.sprite = attackSprite;
+            else if (normalSprite != null)
+                characterSpriteRenderer.sprite = normalSprite;
+        }
+        // Jika sedang melakukan Uppercut.
+        else if (attackType == EnemyHitReaction.AttackType.Uppercut)
+        {
+            if (uppercutSprite != null)
+                characterSpriteRenderer.sprite = uppercutSprite;
+            else if (normalSprite != null)
+                characterSpriteRenderer.sprite = normalSprite;
+        }
+    }
+
+    // =========================================
+    // FACING DIRECTION
+    // =========================================
+
     void UpdateFacingDirection()
     {
         if (playerMovement == null)
@@ -142,6 +193,10 @@ public class BasicAttack : MonoBehaviour
             facingDirection = -1;
         }
     }
+
+    // =========================================
+    // START ATTACK
+    // =========================================
 
     void StartAttack(EnemyHitReaction.AttackType attackType)
     {
@@ -166,6 +221,9 @@ public class BasicAttack : MonoBehaviour
             attackCoroutine = null;
         }
 
+        // Ganti sprite sesuai jenis serangan.
+        SetCharacterSprite(attackType, true);
+
         attackCollider.enabled = false;
 
         if (hitboxRenderer != null)
@@ -187,6 +245,10 @@ public class BasicAttack : MonoBehaviour
 
         attackCoroutine = StartCoroutine(AttackRoutine());
     }
+
+    // =========================================
+    // ATTACK ROUTINE
+    // =========================================
 
     IEnumerator AttackRoutine()
     {
@@ -326,8 +388,15 @@ public class BasicAttack : MonoBehaviour
         if (hitboxRenderer != null)
             hitboxRenderer.enabled = false;
 
+        // Kembalikan sprite karakter menjadi normal.
+        SetCharacterSprite(CurrentAttackType, false);
+
         attackCoroutine = null;
     }
+
+    // =========================================
+    // ATTACK VFX
+    // =========================================
 
     void SpawnAttackVFX(EnemyHitReaction.AttackType attackType)
     {
@@ -370,7 +439,12 @@ public class BasicAttack : MonoBehaviour
         Vector3 scale = vfx.transform.localScale;
         scale.x *= facingDirection;
         vfx.transform.localScale = scale;
+        AudioManager.Instance.PlaySFX("BasicAttack");
     }
+
+    // =========================================
+    // HITBOX POSITION
+    // =========================================
 
     void UpdateHitboxPosition()
     {
@@ -383,6 +457,10 @@ public class BasicAttack : MonoBehaviour
             initialLocalPosition.z
         );
     }
+
+    // =========================================
+    // ON DISABLE
+    // =========================================
 
     void OnDisable()
     {
@@ -397,6 +475,9 @@ public class BasicAttack : MonoBehaviour
 
         if (hitboxRenderer != null)
             hitboxRenderer.enabled = false;
+
+        // Pastikan sprite kembali normal.
+        SetCharacterSprite(CurrentAttackType, false);
 
         hitEnemies.Clear();
         hitProjectiles.Clear();

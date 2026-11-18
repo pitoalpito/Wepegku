@@ -172,6 +172,8 @@ MonoBehaviour:
   handCollider: {fileID: 1830853736}
   defaultSprite: {fileID: -4263371668151663239, guid: ee0d8ad1f0f366d4f8fd168a4a6e0a6a, type: 3}
   groundSlamSprite: {fileID: 6242292328794233916, guid: 23774fa8eb80bd449bbe5a59701849b8, type: 3}
+  defaultHitSprite: {fileID: -585848725088273028, guid: b317583587860b6439774a5ef1ec71d1, type: 3}
+  groundSlamHitSprite: {fileID: 2961752457608857262, guid: f9c8735aab15d384580295a6741f2c2b, type: 3}
   hitColor: {r: 1, g: 1, b: 1, a: 1}
   flashDuration: 0.05
   knockbackDistance: 0.2
@@ -181,6 +183,9 @@ MonoBehaviour:
   recoilDistance: 0.25
   recoilDuration: 0.08
   recoilReturnDuration: 0.18
+  defeatVFXPrefab: {fileID: 0}
+  defeatVFXSpawnPoint: {fileID: 0}
+  defeatVFXOffset: {x: 0, y: 0, z: 0}
 --- !u!1 &134546588
 GameObject:
   m_ObjectHideFlags: 0
@@ -426,8 +431,6 @@ MonoBehaviour:
   followSmoothTime: 0.15
   offsetX: 0
   playerScreenHeight: 0.123
-  defaultZoom: 5
-  zoomSpeed: 3
   shakeIntensity: 0.15
   shakeDuration: 0.1
 --- !u!1 &251973955
@@ -1265,9 +1268,21 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5878397998900162894, guid: c10a76e99477c004280b8179ebb32bdd, type: 3}
+      propertyPath: attackSprite
+      value: 
+      objectReference: {fileID: 3292312392937379113, guid: 303e9872eb867f8409d43b082773f09a, type: 3}
+    - target: {fileID: 5878397998900162894, guid: c10a76e99477c004280b8179ebb32bdd, type: 3}
+      propertyPath: normalSprite
+      value: 
+      objectReference: {fileID: 3292312392937379113, guid: 303e9872eb867f8409d43b082773f09a, type: 3}
+    - target: {fileID: 5878397998900162894, guid: c10a76e99477c004280b8179ebb32bdd, type: 3}
       propertyPath: bossController
       value: 
       objectReference: {fileID: 1121466760}
+    - target: {fileID: 5878397998900162894, guid: c10a76e99477c004280b8179ebb32bdd, type: 3}
+      propertyPath: uppercutSprite
+      value: 
+      objectReference: {fileID: 3292312392937379113, guid: 303e9872eb867f8409d43b082773f09a, type: 3}
     - target: {fileID: 5878397998900162894, guid: c10a76e99477c004280b8179ebb32bdd, type: 3}
       propertyPath: uppercutVFXPrefab
       value: 
@@ -1276,6 +1291,10 @@ PrefabInstance:
       propertyPath: basicAttackVFXPrefab
       value: 
       objectReference: {fileID: 4805403808846726120, guid: 32c7399c8e62a63439b70933e9e5b24f, type: 3}
+    - target: {fileID: 5878397998900162894, guid: c10a76e99477c004280b8179ebb32bdd, type: 3}
+      propertyPath: characterSpriteRenderer
+      value: 
+      objectReference: {fileID: 1545085725}
     - target: {fileID: 7350829587677491497, guid: c10a76e99477c004280b8179ebb32bdd, type: 3}
       propertyPath: m_Name
       value: Player
@@ -1745,6 +1764,7 @@ MonoBehaviour:
   bossController: {fileID: 1121466760}
   spriteRenderer: {fileID: 806268011}
   headCollider: {fileID: 806268012}
+  hitSprite: {fileID: 821458882355717074, guid: 8035d251b35cf1048b81b0e48ee46d47, type: 3}
   hitColor: {r: 1, g: 1, b: 1, a: 1}
   flashDuration: 0.08
   knockbackDistance: 0.2
@@ -2441,6 +2461,10 @@ MonoBehaviour:
   slamTelegraphTime: 1
   slamRecoveryTime: 2.5
   slamDamage: 20
+  slamImpactRadius: 1.5
+  shockwaveDamage: 10
+  shockwaveMaxRadius: 5
+  shockwaveDuration: 0.4
   leftHandRoot: {fileID: 75581854}
   rightHandRoot: {fileID: 1665647255}
   handRaiseHeight: 0.8
@@ -3195,6 +3219,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5861ec30cd06bd43a414400d673b21b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
+--- !u!212 &1545085725 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 2011212744292745976, guid: c10a76e99477c004280b8179ebb32bdd, type: 3}
+  m_PrefabInstance: {fileID: 673949491}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1574749944
 GameObject:
   m_ObjectHideFlags: 0
@@ -3778,6 +3807,8 @@ MonoBehaviour:
   handCollider: {fileID: 743606269}
   defaultSprite: {fileID: -6907499226756093854, guid: 7796bcafb703c0f47b482813eb345bce, type: 3}
   groundSlamSprite: {fileID: 8113378978012109058, guid: 8f6bd5094224d424088d34fd27bd156c, type: 3}
+  defaultHitSprite: {fileID: 6195569859287279080, guid: 6b282522a7f7a484db874aeacb6a6d8f, type: 3}
+  groundSlamHitSprite: {fileID: 8244299321605799750, guid: 94109547f8d5d3e4486653597c91090f, type: 3}
   hitColor: {r: 1, g: 1, b: 1, a: 1}
   flashDuration: 0.05
   knockbackDistance: 0.2
@@ -3787,6 +3818,9 @@ MonoBehaviour:
   recoilDistance: 0.25
   recoilDuration: 0.08
   recoilReturnDuration: 0.18
+  defeatVFXPrefab: {fileID: 0}
+  defeatVFXSpawnPoint: {fileID: 0}
+  defeatVFXOffset: {x: 0, y: 0, z: 0}
 --- !u!1 &1669537703
 GameObject:
   m_ObjectHideFlags: 0
