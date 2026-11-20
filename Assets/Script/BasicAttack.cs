@@ -439,7 +439,7 @@ public class BasicAttack : MonoBehaviour
         Vector3 scale = vfx.transform.localScale;
         scale.x *= facingDirection;
         vfx.transform.localScale = scale;
-        AudioManager.Instance.PlaySFX("BasicAttack");
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX("BasicAttack");
     }
 
     // =========================================

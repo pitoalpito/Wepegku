@@ -292,7 +292,8 @@ public class BossController : MonoBehaviour
         if (readyFightText != null)
             readyFightText.gameObject.SetActive(false);
 
-        AudioManager.Instance.PlayBGM("Level");
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayBGM("Level");
         bossRoutine = StartCoroutine(BossIntroSequence());
     }
 
@@ -500,7 +501,7 @@ public class BossController : MonoBehaviour
             float progress = chargeTimer / chargeTime;
 
             AnimateEyeCharging(progress);
-            AudioManager.Instance.PlaySFX("LaserCharge");
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX("LaserCharge");
 
             Vector2 leftDirection = GetLaserDirection(leftLaserOrigin);
             Vector2 rightDirection = GetLaserDirection(rightLaserOrigin);
@@ -539,7 +540,7 @@ public class BossController : MonoBehaviour
 
         // LASER ATTACK.
         currentState = BossState.LaserAttack;
-        AudioManager.Instance.PlaySFX("Laser");
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX("Laser");
 
         SetLaserWidth(leftLaserLine, firingWidth);
         SetLaserWidth(rightLaserLine, firingWidth);
@@ -1044,7 +1045,7 @@ public class BossController : MonoBehaviour
 
     void ApplyGroundSlamImpact(Vector2 impactPosition)
     {
-        AudioManager.Instance.PlaySFX("GroundSlam");
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX("GroundSlam");
         Collider2D[] hits = Physics2D.OverlapCircleAll(
             impactPosition,
             slamImpactRadius

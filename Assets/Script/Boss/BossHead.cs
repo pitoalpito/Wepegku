@@ -63,6 +63,27 @@ public class BossHead : MonoBehaviour
     }
 
     // =========================================
+    // PROJECTILE REFLECTED DAMAGE
+    // =========================================
+    // Dipakai ketika projectile yang dipantulkan
+    // (terutama projectile mulut pada Phase 2)
+    // mengenai kepala boss. Tidak bergantung pada
+    // status vulnerable agar counter parry tetap
+    // memberikan damage.
+    public void TakeProjectileDamage(int damage)
+    {
+        if (bossController == null || damage <= 0)
+            return;
+
+        bossController.DamageBoss(damage);
+
+        if (hitRoutine != null)
+            StopCoroutine(hitRoutine);
+
+        hitRoutine = StartCoroutine(HitReactionRoutine());
+    }
+
+    // =========================================
     // HEAD SLAM DAMAGE
     // =========================================
 
