@@ -16,6 +16,15 @@ public class PlayerParry : MonoBehaviour
     [Header("Parry Cooldown UI")]
     public Slider cooldownSlider;
 
+    [Header("Parry VFX")]
+    public GameObject parryStartVFX;
+    public GameObject successfulParryVFX;
+
+    [Header("VFX Spawn Settings")]
+    public Transform vfxSpawnPoint;
+    public Vector3 vfxOffset = Vector3.zero;
+    public float vfxDestroyTime = 2f;
+
     public bool IsParrying { get; private set; }
 
     private float nextParryTime;
@@ -51,8 +60,8 @@ public class PlayerParry : MonoBehaviour
             return;
         }
 
-        // 0 = baru dipakai, 1 = siap parry lagi.
         float cooldownStart = nextParryTime - parryCooldown;
+
         float progress = Mathf.Clamp01(
             (Time.time - cooldownStart) / parryCooldown
         );
@@ -66,7 +75,6 @@ public class PlayerParry : MonoBehaviour
 
     void StartParry()
     {
-        // Cek cooldown.
         if (Time.time < nextParryTime)
             return;
 
@@ -76,6 +84,9 @@ public class PlayerParry : MonoBehaviour
             StopCoroutine(parryCoroutine);
 
         parryCoroutine = StartCoroutine(ParryRoutine());
+
+        // Lokasi spawn VFX mulai parry
+        SpawnParryVFX(parryStartVFX);
 
         if (showDebug)
             Debug.Log("Player mulai melakukan PARRY!");
@@ -99,7 +110,7 @@ public class PlayerParry : MonoBehaviour
     }
 
     // =========================================
-    // TRY PARRY
+    // TRY PARRY ENEMY PROJECTILE
     // =========================================
 
     public bool TryParry(EnemyProjectile projectile)
@@ -114,8 +125,9 @@ public class PlayerParry : MonoBehaviour
 
         projectile.ReflectBack();
 
-        // Reset cooldown ketika parry berhasil,
-        // agar player bisa parry lagi tanpa menunggu.
+        // Lokasi spawn VFX ketika parry berhasil
+        SpawnParryVFX(successfulParryVFX);
+
         nextParryTime = Time.time;
 
         Debug.Log("Projectile sudah diperintahkan untuk berbalik.");
@@ -139,13 +151,54 @@ public class PlayerParry : MonoBehaviour
 
         projectile.ReflectBack();
 
-        // Reset cooldown ketika parry berhasil.
+        // Lokasi spawn VFX ketika parry berhasil
+        SpawnParryVFX(successfulParryVFX);
+
         nextParryTime = Time.time;
 
         Debug.Log("Boss projectile sudah diperintahkan untuk berbalik.");
 
         return true;
     }
+
+    // =========================================
+    // SPAWN PARRY VFX
+    // =========================================
+
+    void SpawnParryVFX(GameObject vfxPrefab)
+    {
+        if (vfxPrefab == null)
+            return;
+
+        Vector3 spawnPosition;
+
+        if (vfxSpawnPoint != null)
+        {
+            spawnPosition = vfxSpawnPoint.position;
+        }
+        else
+        {
+            spawnPosition = transform.position;
+        }
+
+        // lokasi spawn vfx
+        spawnPosition += vfxOffset;
+
+        GameObject vfx = Instantiate(
+            vfxPrefab,
+            spawnPosition,
+            Quaternion.identity
+        );
+
+        if (vfxDestroyTime > 0f)
+        {
+            Destroy(vfx, vfxDestroyTime);
+        }
+    }
+
+    // =========================================
+    // DISABLE
+    // =========================================
 
     void OnDisable()
     {
@@ -157,5 +210,4 @@ public class PlayerParry : MonoBehaviour
             parryCoroutine = null;
         }
     }
-    
 }
