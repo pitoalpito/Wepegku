@@ -3702,6 +3702,11 @@ MonoBehaviour:
   parryCooldown: 2
   showDebug: 1
   cooldownSlider: {fileID: 659710509}
+  parryStartVFX: {fileID: 4478670772195100192, guid: cdceaa9e295737c4ab9d53da38e1d853, type: 3}
+  successfulParryVFX: {fileID: 2981601928632210169, guid: 8b124b387314c6f4e87e0131f491c9fa, type: 3}
+  vfxSpawnPoint: {fileID: 1545085702}
+  vfxOffset: {x: 0, y: 0, z: 0}
+  vfxDestroyTime: 2
 --- !u!1 &1574749944
 GameObject:
   m_ObjectHideFlags: 0
